@@ -61,7 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: (payload: { email: string; password: string }) => apiLogin(payload),
-    onSuccess: invalidateAll,
+    // setQueryData (pas juste invalidate) : la garde de route dans
+    // _authenticated/route.tsx lit useAuth().user immédiatement après la
+    // navigation post-login — un simple invalidate() ne fait que déclencher
+    // un refetch en arrière-plan, pas garanti terminé à temps, ce qui
+    // renvoyait l'utilisateur vers /auth juste après une connexion réussie.
+    onSuccess: (user) => {
+      queryClient.setQueryData(["jiropay-auth-me"], user);
+    },
   });
   const login = useCallback(
     async (email: string, password: string) => loginMutation.mutateAsync({ email, password }),

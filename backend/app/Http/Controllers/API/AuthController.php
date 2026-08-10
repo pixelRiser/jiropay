@@ -305,9 +305,13 @@ class AuthController extends Controller
         });
     }
 
+    /**
+     * Inclut le profil métier (client ou guichet) directement dans /me — évite
+     * un aller-retour réseau supplémentaire pour les pages "Mon profil".
+     */
     private function userPayload(User $user): array
     {
-        return [
+        $payload = [
             'id'         => $user->id,
             'name'       => $user->name,
             'email'      => $user->email,
@@ -315,6 +319,42 @@ class AuthController extends Controller
             'phone'      => $user->phone,
             'guichet_id' => $user->guichet_id,
             'status'     => $user->status,
+            'created_at' => $user->created_at,
+            'client'     => null,
+            'guichet'    => null,
         ];
+
+        if ($user->role === 'client') {
+            $client = $user->client()->with('guichetReferent')->first();
+            if ($client) {
+                $payload['client'] = [
+                    'adresse'              => $client->adresse,
+                    'numero_abonne_jirama' => $client->numero_abonne_jirama,
+                    'guichet_referent'     => $client->guichetReferent ? [
+                        'id'   => $client->guichetReferent->id,
+                        'nom'  => $client->guichetReferent->nom,
+                        'lieu' => $client->guichetReferent->lieu,
+                    ] : null,
+                ];
+            }
+        }
+
+        if ($user->role === 'agent' && $user->guichet_id) {
+            $guichet = $user->guichet;
+            if ($guichet) {
+                $payload['guichet'] = [
+                    'id'                         => $guichet->id,
+                    'nom'                        => $guichet->nom,
+                    'lieu'                       => $guichet->lieu,
+                    'zone'                       => $guichet->zone,
+                    'statut'                     => $guichet->statut,
+                    'montant_frais_defaut'       => $guichet->montant_frais_defaut,
+                    'montant_commission_defaut'  => $guichet->montant_commission_defaut,
+                    'solde_commission'           => $guichet->solde_commission,
+                ];
+            }
+        }
+
+        return $payload;
     }
 }

@@ -57,6 +57,27 @@ export async function creerGuichet(payload: {
   return res.data;
 }
 
+export async function majGuichet(
+  id: number,
+  payload: Partial<{
+    nom: string;
+    lieu: string;
+    zone: "ville" | "hors_ville";
+    statut: "actif" | "inactif";
+    montant_frais_defaut: number;
+    montant_commission_defaut: number;
+  }>,
+): Promise<GuichetDetail> {
+  const res = await apiFetch<{ success: boolean; data: GuichetDetail }>(
+    `/api/admin/guichets/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+  return res.data;
+}
+
 export async function agentsEnAttente(): Promise<AgentEnAttente[]> {
   const res = await apiFetch<{ success: boolean; data: AgentEnAttente[] }>(
     "/api/admin/agents/pending",

@@ -8,6 +8,22 @@ export type AuthUser = {
   phone: string | null;
   guichet_id: number | null;
   status: "pending" | "approved" | "rejected";
+  created_at: string;
+  client: {
+    adresse: string | null;
+    numero_abonne_jirama: string;
+    guichet_referent: { id: number; nom: string; lieu: string } | null;
+  } | null;
+  guichet: {
+    id: number;
+    nom: string;
+    lieu: string;
+    zone: "ville" | "hors_ville";
+    statut: "actif" | "inactif";
+    montant_frais_defaut: number;
+    montant_commission_defaut: number;
+    solde_commission: number;
+  } | null;
 };
 
 export type Guichet = { id: number; nom: string; lieu: string };

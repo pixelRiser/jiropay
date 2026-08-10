@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/jiropay/auth-store";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,6 +44,7 @@ export function UserMenu() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, logout } = useAuth();
+  const confirm = useConfirm();
 
   if (!user) return null;
 
@@ -50,6 +52,15 @@ export function UserMenu() {
   const profil = PROFIL_PAR_ROLE[user.role] ?? "/espace/profil";
 
   async function deconnexion() {
+    const ok = await confirm({
+      titre: "Se déconnecter ?",
+      description:
+        "Vous devrez vous reconnecter avec votre email et votre mot de passe pour accéder à nouveau à votre espace.",
+      confirmLabel: "Se déconnecter",
+      destructif: true,
+    });
+    if (!ok) return;
+
     await logout();
     await queryClient.cancelQueries();
     queryClient.clear();
