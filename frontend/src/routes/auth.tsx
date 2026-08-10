@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/jiropay/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -230,9 +231,8 @@ function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="mdp">Mot de passe</Label>
-                    <Input
+                    <PasswordInput
                       id="mdp"
-                      type="password"
                       required
                       value={motDePasse}
                       onChange={(e) => setMotDePasse(e.target.value)}
@@ -243,7 +243,7 @@ function Auth() {
                   </Button>
                   <button
                     type="button"
-                    className="block w-full text-center text-xs text-muted-foreground hover:underline"
+                    className="block w-full cursor-pointer text-center text-xs text-muted-foreground hover:underline"
                     onClick={async () => {
                       if (!email) {
                         toast.error("Entrez votre email d'abord.");
@@ -337,9 +337,8 @@ function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="mdp2">Mot de passe</Label>
-                    <Input
+                    <PasswordInput
                       id="mdp2"
-                      type="password"
                       required
                       minLength={8}
                       value={motDePasse}

@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/jiropay/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Zap } from "lucide-react";
 
@@ -96,9 +97,8 @@ function ReinitialiserMotDePasse() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mdp">Nouveau mot de passe</Label>
-                  <Input
+                  <PasswordInput
                     id="mdp"
-                    type="password"
                     required
                     minLength={8}
                     value={motDePasse}
@@ -107,9 +107,8 @@ function ReinitialiserMotDePasse() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mdp2">Confirmer le mot de passe</Label>
-                  <Input
+                  <PasswordInput
                     id="mdp2"
-                    type="password"
                     required
                     minLength={8}
                     value={confirmation}

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/jiropay/auth-store";
 import { Button } from "@/components/ui/button";
+import { ChangerMotDePasseDialog } from "@/components/ChangerMotDePasseDialog";
 import { Zap } from "lucide-react";
 
 interface Props {
@@ -44,9 +45,12 @@ export function AppShell({ titre, sousTitre, role, children }: Props) {
               </span>
             ) : null}
           </Link>
-          <Button variant="outline" size="sm" onClick={deconnexion}>
-            Déconnexion
-          </Button>
+          <div className="flex items-center gap-1">
+            <ChangerMotDePasseDialog />
+            <Button variant="outline" size="sm" onClick={deconnexion}>
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </header>
 
