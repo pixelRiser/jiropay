@@ -69,7 +69,9 @@ function EspaceDashboard() {
               </span>
               <div className="flex-1">
                 <p className="font-semibold text-foreground">Acheter facture carte</p>
-                <p className="text-sm text-muted-foreground">Référence client et n° de compteur</p>
+                <p className="text-sm text-muted-foreground">
+                  Titulaire, référence client et n° de compteur
+                </p>
               </div>
               <ArrowRight className="size-5 text-muted-foreground" />
             </CardContent>

@@ -28,8 +28,8 @@ export async function mesFactures(): Promise<Facture[]> {
 export async function creerFacture(payload: {
   type: "facture" | "carte";
   reference_facture: string;
+  nom_titulaire: string;
   montant_du: number;
-  nom_titulaire?: string;
   numero_compteur?: string;
 }): Promise<Facture> {
   const res = await apiFetch<{ success: boolean; data: Facture }>("/api/factures", {

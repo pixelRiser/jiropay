@@ -44,6 +44,7 @@ function FactureCarte() {
   const [paiementInitie, setPaiementInitie] = useState(false);
 
   const [referenceClient, setReferenceClient] = useState("");
+  const [nomTitulaire, setNomTitulaire] = useState("");
   const [numeroCompteur, setNumeroCompteur] = useState("");
   const [montant, setMontant] = useState("");
 
@@ -103,8 +104,8 @@ function FactureCarte() {
           <CardHeader>
             <CardTitle>Compteur {facture.numero_compteur}</CardTitle>
             <CardDescription>
-              Référence client : {facture.reference_facture} — Montant :{" "}
-              {facture.montant_du.toLocaleString("fr-FR")} Ar
+              Titulaire : {facture.nom_titulaire} — Référence client : {facture.reference_facture} —
+              Montant : {facture.montant_du.toLocaleString("fr-FR")} Ar
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -151,6 +152,7 @@ function FactureCarte() {
               creerMutation.mutate({
                 type: "carte",
                 reference_facture: referenceClient,
+                nom_titulaire: nomTitulaire,
                 numero_compteur: numeroCompteur,
                 montant_du: Number(montant),
               });
@@ -164,6 +166,15 @@ function FactureCarte() {
                 placeholder="ex : 10611453112E"
                 value={referenceClient}
                 onChange={(e) => setReferenceClient(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="titulaire-carte">Nom du titulaire (sur la facture)</Label>
+              <Input
+                id="titulaire-carte"
+                required
+                value={nomTitulaire}
+                onChange={(e) => setNomTitulaire(e.target.value)}
               />
             </div>
             <div className="space-y-1">
