@@ -10,8 +10,10 @@ export type Paiement = {
 
 export type Facture = {
   id: number;
+  type: "facture" | "carte";
   reference_facture: string | null;
   nom_titulaire: string | null;
+  numero_compteur: string | null;
   montant_du: number;
   statut: "en_attente" | "paye_plateforme" | "paye_jirama" | "valide";
   created_at: string;
@@ -24,9 +26,11 @@ export async function mesFactures(): Promise<Facture[]> {
 }
 
 export async function creerFacture(payload: {
+  type: "facture" | "carte";
   reference_facture: string;
   montant_du: number;
-  nom_titulaire: string;
+  nom_titulaire?: string;
+  numero_compteur?: string;
 }): Promise<Facture> {
   const res = await apiFetch<{ success: boolean; data: Facture }>("/api/factures", {
     method: "POST",
@@ -44,28 +48,4 @@ export async function initierPaiement(payload: {
     body: JSON.stringify(payload),
   });
   return res.data;
-}
-
-export type StatutResponse = {
-  success: boolean;
-  correspond: boolean;
-  message?: string;
-  client?: { nom: string; numero_abonne_jirama: string; adresse: string | null };
-  factures_en_attente?: {
-    id: number;
-    reference_facture: string | null;
-    nom_titulaire: string | null;
-    montant_du: number;
-    created_at: string;
-  }[];
-};
-
-export async function verifierStatut(payload: {
-  reference_client: string;
-  numero_compteur: string;
-}): Promise<StatutResponse> {
-  return apiFetch<StatutResponse>("/api/statut/verifier", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 }

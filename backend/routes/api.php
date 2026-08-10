@@ -7,7 +7,6 @@ use App\Http\Controllers\API\FactureController;
 use App\Http\Controllers\API\GuichetController as MyGuichetController;
 use App\Http\Controllers\API\PaiementController;
 use App\Http\Controllers\API\PublicGuichetController;
-use App\Http\Controllers\API\StatutController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')->group(base_path('routes/auth.php'));
@@ -37,5 +36,4 @@ Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
     Route::get('factures', [FactureController::class, 'mine']);
     Route::post('factures', [FactureController::class, 'store']);
     Route::post('paiements', [PaiementController::class, 'initier']);
-    Route::post('statut/verifier', [StatutController::class, 'verifier']);
 });

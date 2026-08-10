@@ -13,7 +13,7 @@ import {
   Smartphone,
   Store,
   ShieldCheck,
-  IdCard,
+  CreditCard,
   ArrowRight,
 } from "lucide-react";
 
@@ -61,14 +61,14 @@ function EspaceDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link to="/espace/verifier-statut">
+        <Link to="/espace/facture-carte">
           <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
             <CardContent className="flex items-center gap-4 pt-6">
               <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-                <IdCard className="size-6" />
+                <CreditCard className="size-6" />
               </span>
               <div className="flex-1">
-                <p className="font-semibold text-foreground">Vérifier mon statut</p>
+                <p className="font-semibold text-foreground">Acheter facture carte</p>
                 <p className="text-sm text-muted-foreground">Référence client et n° de compteur</p>
               </div>
               <ArrowRight className="size-5 text-muted-foreground" />

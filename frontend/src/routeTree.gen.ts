@@ -22,10 +22,10 @@ import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminGuichetsRouteImport } from './routes/_authenticated/admin/guichets'
 import { Route as AuthenticatedAdminProfilRouteImport } from './routes/_authenticated/admin/profil'
 import { Route as AuthenticatedEspaceIndexRouteImport } from './routes/_authenticated/espace/index'
+import { Route as AuthenticatedEspaceFactureCarteRouteImport } from './routes/_authenticated/espace/facture-carte'
 import { Route as AuthenticatedEspaceFacturesRouteImport } from './routes/_authenticated/espace/factures'
 import { Route as AuthenticatedEspacePayerFactureRouteImport } from './routes/_authenticated/espace/payer-facture'
 import { Route as AuthenticatedEspaceProfilRouteImport } from './routes/_authenticated/espace/profil'
-import { Route as AuthenticatedEspaceVerifierStatutRouteImport } from './routes/_authenticated/espace/verifier-statut'
 import { Route as AuthenticatedGuichetIndexRouteImport } from './routes/_authenticated/guichet/index'
 import { Route as AuthenticatedGuichetClientsRouteImport } from './routes/_authenticated/guichet/clients'
 import { Route as AuthenticatedGuichetProfilRouteImport } from './routes/_authenticated/guichet/profil'
@@ -101,6 +101,12 @@ const AuthenticatedEspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedEspaceRouteRoute,
   } as any)
+const AuthenticatedEspaceFactureCarteRoute =
+  AuthenticatedEspaceFactureCarteRouteImport.update({
+    id: '/facture-carte',
+    path: '/facture-carte',
+    getParentRoute: () => AuthenticatedEspaceRouteRoute,
+  } as any)
 const AuthenticatedEspaceFacturesRoute =
   AuthenticatedEspaceFacturesRouteImport.update({
     id: '/factures',
@@ -117,12 +123,6 @@ const AuthenticatedEspaceProfilRoute =
   AuthenticatedEspaceProfilRouteImport.update({
     id: '/profil',
     path: '/profil',
-    getParentRoute: () => AuthenticatedEspaceRouteRoute,
-  } as any)
-const AuthenticatedEspaceVerifierStatutRoute =
-  AuthenticatedEspaceVerifierStatutRouteImport.update({
-    id: '/verifier-statut',
-    path: '/verifier-statut',
     getParentRoute: () => AuthenticatedEspaceRouteRoute,
   } as any)
 const AuthenticatedGuichetIndexRoute =
@@ -155,10 +155,10 @@ export interface FileRoutesByFullPath {
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/espace/facture-carte': typeof AuthenticatedEspaceFactureCarteRoute
   '/espace/factures': typeof AuthenticatedEspaceFacturesRoute
   '/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/espace/profil': typeof AuthenticatedEspaceProfilRoute
-  '/espace/verifier-statut': typeof AuthenticatedEspaceVerifierStatutRoute
   '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
   '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -173,10 +173,10 @@ export interface FileRoutesByTo {
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/espace/facture-carte': typeof AuthenticatedEspaceFactureCarteRoute
   '/espace/factures': typeof AuthenticatedEspaceFacturesRoute
   '/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/espace/profil': typeof AuthenticatedEspaceProfilRoute
-  '/espace/verifier-statut': typeof AuthenticatedEspaceVerifierStatutRoute
   '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
   '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -196,10 +196,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/_authenticated/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/_authenticated/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/_authenticated/espace/facture-carte': typeof AuthenticatedEspaceFactureCarteRoute
   '/_authenticated/espace/factures': typeof AuthenticatedEspaceFacturesRoute
   '/_authenticated/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/_authenticated/espace/profil': typeof AuthenticatedEspaceProfilRoute
-  '/_authenticated/espace/verifier-statut': typeof AuthenticatedEspaceVerifierStatutRoute
   '/_authenticated/guichet/clients': typeof AuthenticatedGuichetClientsRoute
   '/_authenticated/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -219,10 +219,10 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/guichets'
     | '/admin/profil'
+    | '/espace/facture-carte'
     | '/espace/factures'
     | '/espace/payer-facture'
     | '/espace/profil'
-    | '/espace/verifier-statut'
     | '/guichet/clients'
     | '/guichet/profil'
     | '/admin/'
@@ -237,10 +237,10 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/guichets'
     | '/admin/profil'
+    | '/espace/facture-carte'
     | '/espace/factures'
     | '/espace/payer-facture'
     | '/espace/profil'
-    | '/espace/verifier-statut'
     | '/guichet/clients'
     | '/guichet/profil'
     | '/admin'
@@ -259,10 +259,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/guichets'
     | '/_authenticated/admin/profil'
+    | '/_authenticated/espace/facture-carte'
     | '/_authenticated/espace/factures'
     | '/_authenticated/espace/payer-facture'
     | '/_authenticated/espace/profil'
-    | '/_authenticated/espace/verifier-statut'
     | '/_authenticated/guichet/clients'
     | '/_authenticated/guichet/profil'
     | '/_authenticated/admin/'
@@ -370,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEspaceIndexRouteImport
       parentRoute: typeof AuthenticatedEspaceRouteRoute
     }
+    '/_authenticated/espace/facture-carte': {
+      id: '/_authenticated/espace/facture-carte'
+      path: '/facture-carte'
+      fullPath: '/espace/facture-carte'
+      preLoaderRoute: typeof AuthenticatedEspaceFactureCarteRouteImport
+      parentRoute: typeof AuthenticatedEspaceRouteRoute
+    }
     '/_authenticated/espace/factures': {
       id: '/_authenticated/espace/factures'
       path: '/factures'
@@ -389,13 +396,6 @@ declare module '@tanstack/react-router' {
       path: '/profil'
       fullPath: '/espace/profil'
       preLoaderRoute: typeof AuthenticatedEspaceProfilRouteImport
-      parentRoute: typeof AuthenticatedEspaceRouteRoute
-    }
-    '/_authenticated/espace/verifier-statut': {
-      id: '/_authenticated/espace/verifier-statut'
-      path: '/verifier-statut'
-      fullPath: '/espace/verifier-statut'
-      preLoaderRoute: typeof AuthenticatedEspaceVerifierStatutRouteImport
       parentRoute: typeof AuthenticatedEspaceRouteRoute
     }
     '/_authenticated/guichet/': {
@@ -445,20 +445,19 @@ const AuthenticatedAdminRouteRouteWithChildren =
   )
 
 interface AuthenticatedEspaceRouteRouteChildren {
+  AuthenticatedEspaceFactureCarteRoute: typeof AuthenticatedEspaceFactureCarteRoute
   AuthenticatedEspaceFacturesRoute: typeof AuthenticatedEspaceFacturesRoute
   AuthenticatedEspacePayerFactureRoute: typeof AuthenticatedEspacePayerFactureRoute
   AuthenticatedEspaceProfilRoute: typeof AuthenticatedEspaceProfilRoute
-  AuthenticatedEspaceVerifierStatutRoute: typeof AuthenticatedEspaceVerifierStatutRoute
   AuthenticatedEspaceIndexRoute: typeof AuthenticatedEspaceIndexRoute
 }
 
 const AuthenticatedEspaceRouteRouteChildren: AuthenticatedEspaceRouteRouteChildren =
   {
+    AuthenticatedEspaceFactureCarteRoute: AuthenticatedEspaceFactureCarteRoute,
     AuthenticatedEspaceFacturesRoute: AuthenticatedEspaceFacturesRoute,
     AuthenticatedEspacePayerFactureRoute: AuthenticatedEspacePayerFactureRoute,
     AuthenticatedEspaceProfilRoute: AuthenticatedEspaceProfilRoute,
-    AuthenticatedEspaceVerifierStatutRoute:
-      AuthenticatedEspaceVerifierStatutRoute,
     AuthenticatedEspaceIndexRoute: AuthenticatedEspaceIndexRoute,
   }
 

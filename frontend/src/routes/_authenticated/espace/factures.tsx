@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ReceiptText, Smartphone, ShieldCheck, Bell, Plus } from "lucide-react";
+import { ReceiptText, Smartphone, ShieldCheck, Bell, Plus, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/espace/factures")({
   component: FacturesClient,
@@ -44,18 +44,26 @@ function FacturesClient() {
     <>
       <PageHeader
         titre="Mes factures"
-        sousTitre="L'historique de vos factures JIRAMA et de leurs paiements."
+        sousTitre="L'historique de vos factures et achats de crédit JIRAMA."
       />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Historique</CardTitle>
-          <Button asChild size="sm">
-            <Link to="/espace/payer-facture">
-              <Plus className="mr-2 size-4" />
-              Payer une facture
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link to="/espace/facture-carte">
+                <CreditCard className="mr-2 size-4" />
+                Facture carte
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/espace/payer-facture">
+                <Plus className="mr-2 size-4" />
+                Payer une facture
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -67,16 +75,17 @@ function FacturesClient() {
               </span>
               <p className="text-sm font-medium text-foreground">Aucune facture pour l'instant</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Déclarez votre première facture pour la régler par Orange Money, Mvola ou Airtel
-                Money.
+                Déclarez une facture ou achetez un crédit prépayé pour le régler par Orange Money,
+                Mvola ou Airtel Money.
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Type</TableHead>
                   <TableHead>Référence</TableHead>
-                  <TableHead>Titulaire</TableHead>
+                  <TableHead>Titulaire / Compteur</TableHead>
                   <TableHead>Montant</TableHead>
                   <TableHead>Méthode</TableHead>
                   <TableHead>Statut</TableHead>
@@ -91,8 +100,13 @@ function FacturesClient() {
                     : null;
                   return (
                     <TableRow key={f.id}>
+                      <TableCell>
+                        <Badge variant="outline">{f.type === "carte" ? "Carte" : "Facture"}</Badge>
+                      </TableCell>
                       <TableCell className="font-medium">{f.reference_facture ?? "—"}</TableCell>
-                      <TableCell>{f.nom_titulaire ?? "—"}</TableCell>
+                      <TableCell>
+                        {f.type === "carte" ? f.numero_compteur : f.nom_titulaire}
+                      </TableCell>
                       <TableCell>{f.montant_du.toLocaleString("fr-FR")} Ar</TableCell>
                       <TableCell>
                         {dernierPaiement ? LIBELLE_METHODE[dernierPaiement.methode] : "—"}

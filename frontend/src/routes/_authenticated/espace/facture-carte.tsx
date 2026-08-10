@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Clock, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Clock, CreditCard, ArrowLeft } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/espace/payer-facture")({
-  head: () => ({ meta: [{ title: "Payer une facture — JIRAMA Pay" }] }),
-  component: PayerFacture,
+export const Route = createFileRoute("/_authenticated/espace/facture-carte")({
+  head: () => ({ meta: [{ title: "Acheter facture carte — JIRAMA Pay" }] }),
+  component: FactureCarte,
 });
 
 const METHODES: {
@@ -26,6 +26,8 @@ const METHODES: {
   { valeur: "airtel_money", label: "Airtel Money", couleur: "bg-[#e2231a] text-white" },
 ];
 
+const MONTANTS_RAPIDES = [5000, 10000, 20000, 50000];
+
 function messageErreur(error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
     const payload = error.payload as
@@ -36,14 +38,14 @@ function messageErreur(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function PayerFacture() {
+function FactureCarte() {
   const queryClient = useQueryClient();
   const [facture, setFacture] = useState<Facture | null>(null);
   const [paiementInitie, setPaiementInitie] = useState(false);
 
-  const [referenceFacture, setReferenceFacture] = useState("");
+  const [referenceClient, setReferenceClient] = useState("");
+  const [numeroCompteur, setNumeroCompteur] = useState("");
   const [montant, setMontant] = useState("");
-  const [nomTitulaire, setNomTitulaire] = useState("");
 
   const creerMutation = useMutation({
     mutationFn: creerFacture,
@@ -51,8 +53,7 @@ function PayerFacture() {
       setFacture(data);
       queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
     },
-    onError: (error) =>
-      toast.error(messageErreur(error, "Impossible d'enregistrer cette facture.")),
+    onError: (error) => toast.error(messageErreur(error, "Impossible d'enregistrer cet achat.")),
   });
 
   const paiementMutation = useMutation({
@@ -67,19 +68,20 @@ function PayerFacture() {
   if (paiementInitie && facture) {
     return (
       <>
-        <PageHeader titre="Payer une facture" />
+        <PageHeader titre="Acheter facture carte" />
         <Card className="mx-auto max-w-md">
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <span className="flex size-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
               <Clock className="size-7" />
             </span>
             <h2 className="text-lg font-semibold text-foreground">
-              Paiement en attente de confirmation
+              Achat en attente de confirmation
             </h2>
             <p className="text-sm text-muted-foreground">
-              Votre demande de paiement pour la facture <strong>{facture.reference_facture}</strong>{" "}
-              ({facture.montant_du.toLocaleString("fr-FR")} Ar) a été enregistrée. Suivez les
-              instructions envoyées par votre opérateur mobile money pour confirmer la transaction.
+              Votre demande de crédit pour le compteur <strong>{facture.numero_compteur}</strong> (
+              {facture.montant_du.toLocaleString("fr-FR")} Ar) a été enregistrée. Suivez les
+              instructions envoyées par votre opérateur mobile money pour confirmer la transaction —
+              votre code de rechargement sera disponible dans votre compte après validation.
             </p>
             <Button asChild className="mt-2">
               <Link to="/espace/factures">Voir mes factures</Link>
@@ -93,12 +95,15 @@ function PayerFacture() {
   if (facture) {
     return (
       <>
-        <PageHeader titre="Payer une facture" sousTitre="Choisissez votre méthode de paiement." />
+        <PageHeader
+          titre="Acheter facture carte"
+          sousTitre="Choisissez votre méthode de paiement."
+        />
         <Card className="mx-auto max-w-md">
           <CardHeader>
-            <CardTitle>{facture.reference_facture}</CardTitle>
+            <CardTitle>Compteur {facture.numero_compteur}</CardTitle>
             <CardDescription>
-              Titulaire : {facture.nom_titulaire} — Montant :{" "}
+              Référence client : {facture.reference_facture} — Montant :{" "}
               {facture.montant_du.toLocaleString("fr-FR")} Ar
             </CardDescription>
           </CardHeader>
@@ -123,7 +128,7 @@ function PayerFacture() {
               disabled={paiementMutation.isPending}
             >
               <ArrowLeft className="mr-2 size-4" />
-              Modifier la facture
+              Modifier
             </Button>
           </CardContent>
         </Card>
@@ -134,8 +139,8 @@ function PayerFacture() {
   return (
     <>
       <PageHeader
-        titre="Payer une facture"
-        sousTitre="Renseignez la référence figurant sur votre facture JIRAMA."
+        titre="Acheter facture carte"
+        sousTitre="Rechargez un compteur prépayé JIRAMA, comme un crédit téléphonique."
       />
       <Card className="mx-auto max-w-md">
         <CardContent className="pt-6">
@@ -144,34 +149,35 @@ function PayerFacture() {
             onSubmit={(e) => {
               e.preventDefault();
               creerMutation.mutate({
-                type: "facture",
-                reference_facture: referenceFacture,
+                type: "carte",
+                reference_facture: referenceClient,
+                numero_compteur: numeroCompteur,
                 montant_du: Number(montant),
-                nom_titulaire: nomTitulaire,
               });
             }}
           >
             <div className="space-y-1">
-              <Label htmlFor="ref">Référence facture</Label>
+              <Label htmlFor="ref-client">Référence client</Label>
               <Input
-                id="ref"
+                id="ref-client"
                 required
-                placeholder="ex : 106 260 626 103 856"
-                value={referenceFacture}
-                onChange={(e) => setReferenceFacture(e.target.value)}
+                placeholder="ex : 10611453112E"
+                value={referenceClient}
+                onChange={(e) => setReferenceClient(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="titulaire">Nom du titulaire (sur la facture)</Label>
+              <Label htmlFor="compteur">N° compteur</Label>
               <Input
-                id="titulaire"
+                id="compteur"
                 required
-                value={nomTitulaire}
-                onChange={(e) => setNomTitulaire(e.target.value)}
+                placeholder="ex : 23230242945"
+                value={numeroCompteur}
+                onChange={(e) => setNumeroCompteur(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="montant">Montant facture (Ar)</Label>
+              <Label htmlFor="montant">Montant du crédit (Ar)</Label>
               <Input
                 id="montant"
                 type="number"
@@ -180,13 +186,25 @@ function PayerFacture() {
                 value={montant}
                 onChange={(e) => setMontant(e.target.value)}
               />
+              <div className="flex flex-wrap gap-2 pt-1">
+                {MONTANTS_RAPIDES.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMontant(String(m))}
+                    className="cursor-pointer rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {m.toLocaleString("fr-FR")} Ar
+                  </button>
+                ))}
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={creerMutation.isPending}>
               {creerMutation.isPending ? (
                 "Enregistrement…"
               ) : (
                 <>
-                  <CheckCircle2 className="mr-2 size-4" />
+                  <CreditCard className="mr-2 size-4" />
                   Continuer
                 </>
               )}
