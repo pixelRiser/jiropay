@@ -13,9 +13,20 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedEspaceRouteImport } from './routes/_authenticated/espace'
-import { Route as AuthenticatedGuichetRouteImport } from './routes/_authenticated/guichet'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedEspaceRouteRouteImport } from './routes/_authenticated/espace/route'
+import { Route as AuthenticatedGuichetRouteRouteImport } from './routes/_authenticated/guichet/route'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminAgentsRouteImport } from './routes/_authenticated/admin/agents'
+import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin/clients'
+import { Route as AuthenticatedAdminGuichetsRouteImport } from './routes/_authenticated/admin/guichets'
+import { Route as AuthenticatedAdminProfilRouteImport } from './routes/_authenticated/admin/profil'
+import { Route as AuthenticatedEspaceIndexRouteImport } from './routes/_authenticated/espace/index'
+import { Route as AuthenticatedEspaceFacturesRouteImport } from './routes/_authenticated/espace/factures'
+import { Route as AuthenticatedEspaceProfilRouteImport } from './routes/_authenticated/espace/profil'
+import { Route as AuthenticatedGuichetIndexRouteImport } from './routes/_authenticated/guichet/index'
+import { Route as AuthenticatedGuichetClientsRouteImport } from './routes/_authenticated/guichet/clients'
+import { Route as AuthenticatedGuichetProfilRouteImport } from './routes/_authenticated/guichet/profil'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,37 +47,123 @@ const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
   path: '/reinitialiser-mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedEspaceRoute = AuthenticatedEspaceRouteImport.update({
-  id: '/espace',
-  path: '/espace',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedEspaceRouteRoute =
+  AuthenticatedEspaceRouteRouteImport.update({
+    id: '/espace',
+    path: '/espace',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGuichetRouteRoute =
+  AuthenticatedGuichetRouteRouteImport.update({
+    id: '/guichet',
+    path: '/guichet',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
-const AuthenticatedGuichetRoute = AuthenticatedGuichetRouteImport.update({
-  id: '/guichet',
-  path: '/guichet',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedAdminAgentsRoute =
+  AuthenticatedAdminAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminClientsRoute =
+  AuthenticatedAdminClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminGuichetsRoute =
+  AuthenticatedAdminGuichetsRouteImport.update({
+    id: '/guichets',
+    path: '/guichets',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminProfilRoute =
+  AuthenticatedAdminProfilRouteImport.update({
+    id: '/profil',
+    path: '/profil',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedEspaceIndexRoute =
+  AuthenticatedEspaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEspaceRouteRoute,
+  } as any)
+const AuthenticatedEspaceFacturesRoute =
+  AuthenticatedEspaceFacturesRouteImport.update({
+    id: '/factures',
+    path: '/factures',
+    getParentRoute: () => AuthenticatedEspaceRouteRoute,
+  } as any)
+const AuthenticatedEspaceProfilRoute =
+  AuthenticatedEspaceProfilRouteImport.update({
+    id: '/profil',
+    path: '/profil',
+    getParentRoute: () => AuthenticatedEspaceRouteRoute,
+  } as any)
+const AuthenticatedGuichetIndexRoute =
+  AuthenticatedGuichetIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedGuichetRouteRoute,
+  } as any)
+const AuthenticatedGuichetClientsRoute =
+  AuthenticatedGuichetClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedGuichetRouteRoute,
+  } as any)
+const AuthenticatedGuichetProfilRoute =
+  AuthenticatedGuichetProfilRouteImport.update({
+    id: '/profil',
+    path: '/profil',
+    getParentRoute: () => AuthenticatedGuichetRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/admin': typeof AuthenticatedAdminRoute
-  '/espace': typeof AuthenticatedEspaceRoute
-  '/guichet': typeof AuthenticatedGuichetRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/espace': typeof AuthenticatedEspaceRouteRouteWithChildren
+  '/guichet': typeof AuthenticatedGuichetRouteRouteWithChildren
+  '/admin/agents': typeof AuthenticatedAdminAgentsRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
+  '/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/espace/factures': typeof AuthenticatedEspaceFacturesRoute
+  '/espace/profil': typeof AuthenticatedEspaceProfilRoute
+  '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/espace/': typeof AuthenticatedEspaceIndexRoute
+  '/guichet/': typeof AuthenticatedGuichetIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/admin': typeof AuthenticatedAdminRoute
-  '/espace': typeof AuthenticatedEspaceRoute
-  '/guichet': typeof AuthenticatedGuichetRoute
+  '/admin/agents': typeof AuthenticatedAdminAgentsRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
+  '/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/espace/factures': typeof AuthenticatedEspaceFacturesRoute
+  '/espace/profil': typeof AuthenticatedEspaceProfilRoute
+  '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/espace': typeof AuthenticatedEspaceIndexRoute
+  '/guichet': typeof AuthenticatedGuichetIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -74,9 +171,20 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/_authenticated/espace': typeof AuthenticatedEspaceRoute
-  '/_authenticated/guichet': typeof AuthenticatedGuichetRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/espace': typeof AuthenticatedEspaceRouteRouteWithChildren
+  '/_authenticated/guichet': typeof AuthenticatedGuichetRouteRouteWithChildren
+  '/_authenticated/admin/agents': typeof AuthenticatedAdminAgentsRoute
+  '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/_authenticated/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
+  '/_authenticated/admin/profil': typeof AuthenticatedAdminProfilRoute
+  '/_authenticated/espace/factures': typeof AuthenticatedEspaceFacturesRoute
+  '/_authenticated/espace/profil': typeof AuthenticatedEspaceProfilRoute
+  '/_authenticated/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/_authenticated/guichet/profil': typeof AuthenticatedGuichetProfilRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/espace/': typeof AuthenticatedEspaceIndexRoute
+  '/_authenticated/guichet/': typeof AuthenticatedGuichetIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,11 +195,30 @@ export interface FileRouteTypes {
     | '/admin'
     | '/espace'
     | '/guichet'
+    | '/admin/agents'
+    | '/admin/clients'
+    | '/admin/guichets'
+    | '/admin/profil'
+    | '/espace/factures'
+    | '/espace/profil'
+    | '/guichet/clients'
+    | '/guichet/profil'
+    | '/admin/'
+    | '/espace/'
+    | '/guichet/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reinitialiser-mot-de-passe'
+    | '/admin/agents'
+    | '/admin/clients'
+    | '/admin/guichets'
+    | '/admin/profil'
+    | '/espace/factures'
+    | '/espace/profil'
+    | '/guichet/clients'
+    | '/guichet/profil'
     | '/admin'
     | '/espace'
     | '/guichet'
@@ -104,6 +231,17 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/espace'
     | '/_authenticated/guichet'
+    | '/_authenticated/admin/agents'
+    | '/_authenticated/admin/clients'
+    | '/_authenticated/admin/guichets'
+    | '/_authenticated/admin/profil'
+    | '/_authenticated/espace/factures'
+    | '/_authenticated/espace/profil'
+    | '/_authenticated/guichet/clients'
+    | '/_authenticated/guichet/profil'
+    | '/_authenticated/admin/'
+    | '/_authenticated/espace/'
+    | '/_authenticated/guichet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -147,36 +285,171 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/espace': {
       id: '/_authenticated/espace'
       path: '/espace'
       fullPath: '/espace'
-      preLoaderRoute: typeof AuthenticatedEspaceRouteImport
+      preLoaderRoute: typeof AuthenticatedEspaceRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/guichet': {
       id: '/_authenticated/guichet'
       path: '/guichet'
       fullPath: '/guichet'
-      preLoaderRoute: typeof AuthenticatedGuichetRouteImport
+      preLoaderRoute: typeof AuthenticatedGuichetRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/agents': {
+      id: '/_authenticated/admin/agents'
+      path: '/agents'
+      fullPath: '/admin/agents'
+      preLoaderRoute: typeof AuthenticatedAdminAgentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/clients': {
+      id: '/_authenticated/admin/clients'
+      path: '/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AuthenticatedAdminClientsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/guichets': {
+      id: '/_authenticated/admin/guichets'
+      path: '/guichets'
+      fullPath: '/admin/guichets'
+      preLoaderRoute: typeof AuthenticatedAdminGuichetsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/profil': {
+      id: '/_authenticated/admin/profil'
+      path: '/profil'
+      fullPath: '/admin/profil'
+      preLoaderRoute: typeof AuthenticatedAdminProfilRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/espace/': {
+      id: '/_authenticated/espace/'
+      path: '/'
+      fullPath: '/espace/'
+      preLoaderRoute: typeof AuthenticatedEspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedEspaceRouteRoute
+    }
+    '/_authenticated/espace/factures': {
+      id: '/_authenticated/espace/factures'
+      path: '/factures'
+      fullPath: '/espace/factures'
+      preLoaderRoute: typeof AuthenticatedEspaceFacturesRouteImport
+      parentRoute: typeof AuthenticatedEspaceRouteRoute
+    }
+    '/_authenticated/espace/profil': {
+      id: '/_authenticated/espace/profil'
+      path: '/profil'
+      fullPath: '/espace/profil'
+      preLoaderRoute: typeof AuthenticatedEspaceProfilRouteImport
+      parentRoute: typeof AuthenticatedEspaceRouteRoute
+    }
+    '/_authenticated/guichet/': {
+      id: '/_authenticated/guichet/'
+      path: '/'
+      fullPath: '/guichet/'
+      preLoaderRoute: typeof AuthenticatedGuichetIndexRouteImport
+      parentRoute: typeof AuthenticatedGuichetRouteRoute
+    }
+    '/_authenticated/guichet/clients': {
+      id: '/_authenticated/guichet/clients'
+      path: '/clients'
+      fullPath: '/guichet/clients'
+      preLoaderRoute: typeof AuthenticatedGuichetClientsRouteImport
+      parentRoute: typeof AuthenticatedGuichetRouteRoute
+    }
+    '/_authenticated/guichet/profil': {
+      id: '/_authenticated/guichet/profil'
+      path: '/profil'
+      fullPath: '/guichet/profil'
+      preLoaderRoute: typeof AuthenticatedGuichetProfilRouteImport
+      parentRoute: typeof AuthenticatedGuichetRouteRoute
     }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminAgentsRoute: typeof AuthenticatedAdminAgentsRoute
+  AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRoute
+  AuthenticatedAdminGuichetsRoute: typeof AuthenticatedAdminGuichetsRoute
+  AuthenticatedAdminProfilRoute: typeof AuthenticatedAdminProfilRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminAgentsRoute: AuthenticatedAdminAgentsRoute,
+    AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRoute,
+    AuthenticatedAdminGuichetsRoute: AuthenticatedAdminGuichetsRoute,
+    AuthenticatedAdminProfilRoute: AuthenticatedAdminProfilRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedEspaceRouteRouteChildren {
+  AuthenticatedEspaceFacturesRoute: typeof AuthenticatedEspaceFacturesRoute
+  AuthenticatedEspaceProfilRoute: typeof AuthenticatedEspaceProfilRoute
+  AuthenticatedEspaceIndexRoute: typeof AuthenticatedEspaceIndexRoute
+}
+
+const AuthenticatedEspaceRouteRouteChildren: AuthenticatedEspaceRouteRouteChildren =
+  {
+    AuthenticatedEspaceFacturesRoute: AuthenticatedEspaceFacturesRoute,
+    AuthenticatedEspaceProfilRoute: AuthenticatedEspaceProfilRoute,
+    AuthenticatedEspaceIndexRoute: AuthenticatedEspaceIndexRoute,
+  }
+
+const AuthenticatedEspaceRouteRouteWithChildren =
+  AuthenticatedEspaceRouteRoute._addFileChildren(
+    AuthenticatedEspaceRouteRouteChildren,
+  )
+
+interface AuthenticatedGuichetRouteRouteChildren {
+  AuthenticatedGuichetClientsRoute: typeof AuthenticatedGuichetClientsRoute
+  AuthenticatedGuichetProfilRoute: typeof AuthenticatedGuichetProfilRoute
+  AuthenticatedGuichetIndexRoute: typeof AuthenticatedGuichetIndexRoute
+}
+
+const AuthenticatedGuichetRouteRouteChildren: AuthenticatedGuichetRouteRouteChildren =
+  {
+    AuthenticatedGuichetClientsRoute: AuthenticatedGuichetClientsRoute,
+    AuthenticatedGuichetProfilRoute: AuthenticatedGuichetProfilRoute,
+    AuthenticatedGuichetIndexRoute: AuthenticatedGuichetIndexRoute,
+  }
+
+const AuthenticatedGuichetRouteRouteWithChildren =
+  AuthenticatedGuichetRouteRoute._addFileChildren(
+    AuthenticatedGuichetRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedEspaceRoute: typeof AuthenticatedEspaceRoute
-  AuthenticatedGuichetRoute: typeof AuthenticatedGuichetRoute
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedEspaceRouteRoute: typeof AuthenticatedEspaceRouteRouteWithChildren
+  AuthenticatedGuichetRouteRoute: typeof AuthenticatedGuichetRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedEspaceRoute: AuthenticatedEspaceRoute,
-  AuthenticatedGuichetRoute: AuthenticatedGuichetRoute,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedEspaceRouteRoute: AuthenticatedEspaceRouteRouteWithChildren,
+  AuthenticatedGuichetRouteRoute: AuthenticatedGuichetRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
