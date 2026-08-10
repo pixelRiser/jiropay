@@ -15,11 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Compte admin par défaut — vérifié automatiquement (contrairement aux
+        // comptes client/agent qui doivent toujours passer par la vérification
+        // email, et pour un agent, l'approbation admin).
+        if (! User::where('email', 'jiropay@admin.com')->exists()) {
+            $admin = User::create([
+                'name'     => 'Admin JiroPay',
+                'email'    => 'jiropay@admin.com',
+                'password' => 'JiroPay@2026',
+                'role'     => 'admin',
+                'status'   => 'approved',
+            ]);
+            $admin->markEmailAsVerified();
+        }
     }
 }

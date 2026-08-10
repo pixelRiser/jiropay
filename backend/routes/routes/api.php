@@ -3,7 +3,6 @@
 use App\Http\Controllers\API\Admin\AgentController;
 use App\Http\Controllers\API\Admin\GuichetController;
 use App\Http\Controllers\API\ClientController;
-use App\Http\Controllers\API\GuichetController as MyGuichetController;
 use App\Http\Controllers\API\PublicGuichetController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,8 +23,4 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
 Route::middleware(['auth:sanctum', 'role:admin,agent'])->group(function () {
     Route::get('clients', [ClientController::class, 'index']);
     Route::post('clients', [ClientController::class, 'store']);
-});
-
-Route::middleware(['auth:sanctum', 'role:agent'])->group(function () {
-    Route::get('mon-guichet', [MyGuichetController::class, 'mine']);
 });
