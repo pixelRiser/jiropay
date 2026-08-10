@@ -1,10 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/jiropay/auth-store";
+import { mesFactures } from "@/lib/jiropay/facture-api";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ReceiptText, Wallet, Clock, Smartphone, Store, ShieldCheck } from "lucide-react";
+import {
+  ReceiptText,
+  Wallet,
+  Clock,
+  Smartphone,
+  Store,
+  ShieldCheck,
+  IdCard,
+  ArrowRight,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/espace/")({
   component: EspaceDashboard,
@@ -12,9 +23,19 @@ export const Route = createFileRoute("/_authenticated/espace/")({
 
 function EspaceDashboard() {
   const { user } = useAuth();
+  const { data: factures = [] } = useQuery({ queryKey: ["mes-factures"], queryFn: mesFactures });
   const heureActuelle = new Date().getHours();
   const salutation =
     heureActuelle < 12 ? "Bonjour" : heureActuelle < 18 ? "Bon après-midi" : "Bonsoir";
+
+  const facturesEnAttente = factures.filter((f) => f.statut === "en_attente").length;
+  const paiementsConfirmes = factures
+    .flatMap((f) => f.paiements)
+    .filter((p) => p.statut_mobile_money === "confirme");
+  const montantTotalRegle = paiementsConfirmes.reduce((total, p) => total + p.montant, 0);
+  const dernierPaiement = factures
+    .flatMap((f) => f.paiements)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
   return (
     <>
@@ -23,16 +44,49 @@ function EspaceDashboard() {
         sousTitre="Voici un aperçu de votre compte JIRAMA Pay."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link to="/espace/payer-facture">
+          <Card className="h-full cursor-pointer border-primary/20 bg-primary/5 transition-colors hover:bg-primary/10">
+            <CardContent className="flex items-center gap-4 pt-6">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <ReceiptText className="size-6" />
+              </span>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">Payer une facture</p>
+                <p className="text-sm text-muted-foreground">
+                  Référence facture, montant et titulaire
+                </p>
+              </div>
+              <ArrowRight className="size-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/espace/verifier-statut">
+          <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
+            <CardContent className="flex items-center gap-4 pt-6">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+                <IdCard className="size-6" />
+              </span>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">Vérifier mon statut</p>
+                <p className="text-sm text-muted-foreground">Référence client et n° de compteur</p>
+              </div>
+              <ArrowRight className="size-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">Factures en attente</CardTitle>
             <ReceiptText className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">0</p>
+            <p className="text-2xl font-bold">{facturesEnAttente}</p>
             <p className="text-xs text-muted-foreground">
-              Aucune facture enregistrée pour l'instant
+              {facturesEnAttente === 0 ? "Aucune facture enregistrée pour l'instant" : "À régler"}
             </p>
           </CardContent>
         </Card>
@@ -42,7 +96,7 @@ function EspaceDashboard() {
             <Wallet className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">0 Ar</p>
+            <p className="text-2xl font-bold">{montantTotalRegle.toLocaleString("fr-FR")} Ar</p>
             <p className="text-xs text-muted-foreground">Depuis la création de votre compte</p>
           </CardContent>
         </Card>
@@ -52,8 +106,14 @@ function EspaceDashboard() {
             <Clock className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">—</p>
-            <p className="text-xs text-muted-foreground">Aucun paiement effectué</p>
+            <p className="text-2xl font-bold">
+              {dernierPaiement ? `${dernierPaiement.montant.toLocaleString("fr-FR")} Ar` : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {dernierPaiement
+                ? new Date(dernierPaiement.created_at).toLocaleDateString("fr-FR")
+                : "Aucun paiement effectué"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -71,7 +131,7 @@ function EspaceDashboard() {
                 </span>
                 <p className="text-sm font-medium text-foreground">1. Déclarez votre facture</p>
                 <p className="text-xs text-muted-foreground">
-                  Numéro d'abonné, mois facturé et montant dû — c'est tout ce qu'il faut.
+                  Référence facture, montant dû et nom du titulaire du compteur.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -80,7 +140,7 @@ function EspaceDashboard() {
                 </span>
                 <p className="text-sm font-medium text-foreground">2. Payez par mobile money</p>
                 <p className="text-xs text-muted-foreground">
-                  Orange Money ou Mvola, directement depuis votre téléphone.
+                  Orange Money, Mvola ou Airtel Money, depuis votre téléphone.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -96,8 +156,8 @@ function EspaceDashboard() {
             </div>
             <Separator className="my-4" />
             <p className="text-xs text-muted-foreground">
-              Le paiement en ligne des factures arrive bientôt sur JIRAMA Pay. Vous serez notifié
-              dès qu'il sera disponible pour votre compte.
+              La confirmation automatique du paiement mobile money arrive bientôt — votre paiement
+              reste "en attente" jusqu'à validation.
             </p>
             <Button asChild variant="outline" className="mt-3">
               <Link to="/espace/factures">Voir mes factures</Link>

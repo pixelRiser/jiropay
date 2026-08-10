@@ -1,5 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { mesFactures } from "@/lib/jiropay/facture-api";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -9,54 +13,104 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ReceiptText, Smartphone, ShieldCheck, Bell } from "lucide-react";
+import { ReceiptText, Smartphone, ShieldCheck, Bell, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/espace/factures")({
   component: FacturesClient,
 });
 
+const LIBELLE_STATUT_PAIEMENT: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
+  en_attente: { label: "En attente", variant: "secondary" },
+  confirme: { label: "Confirmé", variant: "default" },
+  echoue: { label: "Échoué", variant: "destructive" },
+};
+
+const LIBELLE_METHODE: Record<string, string> = {
+  orange_money: "Orange Money",
+  mvola: "Mvola",
+  airtel_money: "Airtel Money",
+};
+
 function FacturesClient() {
+  const { data: factures = [], isLoading } = useQuery({
+    queryKey: ["mes-factures"],
+    queryFn: mesFactures,
+  });
+
   return (
     <>
       <PageHeader
         titre="Mes factures"
-        sousTitre="L'historique de vos factures JIRAMA et de leurs paiements apparaîtra ici."
+        sousTitre="L'historique de vos factures JIRAMA et de leurs paiements."
       />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Historique</CardTitle>
+          <Button asChild size="sm">
+            <Link to="/espace/payer-facture">
+              <Plus className="mr-2 size-4" />
+              Payer une facture
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mois facturé</TableHead>
-                <TableHead>Montant dû</TableHead>
-                <TableHead>Méthode de paiement</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Reçu</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                      <ReceiptText className="size-6" />
-                    </span>
-                    <p className="text-sm font-medium text-foreground">
-                      Aucune facture pour l'instant
-                    </p>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                      Dès que le paiement en ligne sera activé pour votre compte, vous pourrez
-                      déclarer une facture ici et la régler par Orange Money ou Mvola.
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          {isLoading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Chargement…</p>
+          ) : factures.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <ReceiptText className="size-6" />
+              </span>
+              <p className="text-sm font-medium text-foreground">Aucune facture pour l'instant</p>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Déclarez votre première facture pour la régler par Orange Money, Mvola ou Airtel
+                Money.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Référence</TableHead>
+                  <TableHead>Titulaire</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Méthode</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {factures.map((f) => {
+                  const dernierPaiement = f.paiements[0];
+                  const statut = dernierPaiement
+                    ? LIBELLE_STATUT_PAIEMENT[dernierPaiement.statut_mobile_money]
+                    : null;
+                  return (
+                    <TableRow key={f.id}>
+                      <TableCell className="font-medium">{f.reference_facture ?? "—"}</TableCell>
+                      <TableCell>{f.nom_titulaire ?? "—"}</TableCell>
+                      <TableCell>{f.montant_du.toLocaleString("fr-FR")} Ar</TableCell>
+                      <TableCell>
+                        {dernierPaiement ? LIBELLE_METHODE[dernierPaiement.methode] : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {statut ? (
+                          <Badge variant={statut.variant}>{statut.label}</Badge>
+                        ) : (
+                          <Badge variant="secondary">Non payée</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>{new Date(f.created_at).toLocaleDateString("fr-FR")}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -68,9 +122,7 @@ function FacturesClient() {
             </span>
             <div>
               <p className="text-sm font-medium text-foreground">Paiement mobile money</p>
-              <p className="text-xs text-muted-foreground">
-                Orange Money et Mvola, en toute sécurité.
-              </p>
+              <p className="text-xs text-muted-foreground">Orange Money, Mvola et Airtel Money.</p>
             </div>
           </CardContent>
         </Card>
