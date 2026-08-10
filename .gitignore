@@ -1,0 +1,54 @@
+# ============================================================
+# jiropay — gitignore racine du monorepo (frontend/ + backend/)
+# ============================================================
+
+# Généré par deploy.sh à chaque release — jamais commité
+/docker-compose.yml
+/.env
+# Dockerfiles copiés depuis templates/ à chaque déploiement (pas dans Git,
+# même règle que pixel-rise/pico.doc/k-asa) — pour changer un Dockerfile,
+# éditer /var/www/jiropay/templates/{frontend,backend}/Dockerfile sur le serveur.
+frontend/Dockerfile
+backend/Dockerfile
+
+# ── Frontend (bun / TanStack Start / Vite) ──
+frontend/node_modules/
+frontend/.output/
+frontend/.vinxi/
+frontend/.tanstack/**
+frontend/.nitro/
+frontend/dist/
+frontend/*.local
+
+# ── Backend (Laravel) ──
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/storage/*.key
+backend/storage/pail
+backend/public/build
+backend/public/hot
+backend/public/storage
+backend/.phpunit.cache
+backend/.phpunit.result.cache
+backend/_ide_helper.php
+
+# ── Éditeurs / OS ──
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.log
+
+# ── Dossiers serveur (jamais dans Git — locaux à chaque machine, même
+# convention que pico.doc/k-asa : scripts/templates/docs restent des
+# artefacts d'infra propres à CE serveur, pas du code applicatif versionné) ──
+/releases/
+/shared/
+/backups/
+/logs/
+/scripts/
+/templates/
+/docs/
