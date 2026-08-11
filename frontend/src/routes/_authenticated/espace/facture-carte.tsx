@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,22 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Clock, CreditCard, ArrowLeft } from "lucide-react";
+import { CreditCard, ArrowLeft, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/espace/facture-carte")({
   head: () => ({ meta: [{ title: "Acheter facture carte — JIRAMA Pay" }] }),
   component: FactureCarte,
 });
-
-const METHODES: {
-  valeur: "orange_money" | "mvola" | "airtel_money";
-  label: string;
-  couleur: string;
-}[] = [
-  { valeur: "mvola", label: "Mvola", couleur: "bg-[#f7941d] text-white" },
-  { valeur: "orange_money", label: "Orange Money", couleur: "bg-[#ff7900] text-white" },
-  { valeur: "airtel_money", label: "Airtel Money", couleur: "bg-[#e2231a] text-white" },
-];
 
 const MONTANTS_RAPIDES = [5000, 10000, 20000, 50000];
 
@@ -41,7 +31,6 @@ function messageErreur(error: unknown, fallback: string): string {
 function FactureCarte() {
   const queryClient = useQueryClient();
   const [facture, setFacture] = useState<Facture | null>(null);
-  const [paiementInitie, setPaiementInitie] = useState(false);
 
   const [referenceClient, setReferenceClient] = useState("");
   const [nomTitulaire, setNomTitulaire] = useState("");
@@ -59,46 +48,23 @@ function FactureCarte() {
 
   const paiementMutation = useMutation({
     mutationFn: initierPaiement,
-    onSuccess: () => {
-      setPaiementInitie(true);
+    onSuccess: (paiement) => {
       queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
+      if (paiement.checkout_url) {
+        window.location.href = paiement.checkout_url;
+      } else {
+        toast.error("GoalPay n'a pas renvoyé de lien de paiement.");
+      }
     },
     onError: (error) => toast.error(messageErreur(error, "Impossible d'initier ce paiement.")),
   });
-
-  if (paiementInitie && facture) {
-    return (
-      <>
-        <PageHeader titre="Acheter facture carte" />
-        <Card className="mx-auto max-w-md">
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <span className="flex size-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-              <Clock className="size-7" />
-            </span>
-            <h2 className="text-lg font-semibold text-foreground">
-              Achat en attente de confirmation
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Votre demande de crédit pour le compteur <strong>{facture.numero_compteur}</strong> (
-              {facture.montant_du.toLocaleString("fr-FR")} Ar) a été enregistrée. Suivez les
-              instructions envoyées par votre opérateur mobile money pour confirmer la transaction —
-              votre code de rechargement sera disponible dans votre compte après validation.
-            </p>
-            <Button asChild className="mt-2">
-              <Link to="/espace/factures">Voir mes factures</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </>
-    );
-  }
 
   if (facture) {
     return (
       <>
         <PageHeader
           titre="Acheter facture carte"
-          sousTitre="Choisissez votre méthode de paiement."
+          sousTitre="Vous allez être redirigé vers GoalPay pour choisir Orange Money ou Telma."
         />
         <Card className="mx-auto max-w-md">
           <CardHeader>
@@ -109,19 +75,14 @@ function FactureCarte() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {METHODES.map((m) => (
-              <button
-                key={m.valeur}
-                type="button"
-                disabled={paiementMutation.isPending}
-                onClick={() =>
-                  paiementMutation.mutate({ facture_id: facture.id, methode: m.valeur })
-                }
-                className={`flex w-full cursor-pointer items-center justify-center rounded-lg py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${m.couleur}`}
-              >
-                {m.label}
-              </button>
-            ))}
+            <Button
+              className="w-full"
+              disabled={paiementMutation.isPending}
+              onClick={() => paiementMutation.mutate({ facture_id: facture.id })}
+            >
+              <Wallet className="mr-2 size-4" />
+              {paiementMutation.isPending ? "Redirection en cours…" : "Payer avec GoalPay"}
+            </Button>
             <Button
               variant="ghost"
               className="w-full"

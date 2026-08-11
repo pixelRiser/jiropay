@@ -4,6 +4,7 @@ use App\Http\Controllers\API\Admin\AgentController;
 use App\Http\Controllers\API\Admin\GuichetController;
 use App\Http\Controllers\API\ClientController;
 use App\Http\Controllers\API\FactureController;
+use App\Http\Controllers\API\GoalpayWebhookController;
 use App\Http\Controllers\API\GuichetController as MyGuichetController;
 use App\Http\Controllers\API\PaiementController;
 use App\Http\Controllers\API\PublicGuichetController;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('api')->group(base_path('routes/auth.php'));
 
 Route::get('public/guichets', [PublicGuichetController::class, 'index']);
+
+// GoalPay — pas de middleware auth, vérifié par signature HMAC dans le controller.
+Route::post('webhooks/goalpay', [GoalpayWebhookController::class, 'handle']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('guichets', [GuichetController::class, 'index']);

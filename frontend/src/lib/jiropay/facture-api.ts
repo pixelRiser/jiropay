@@ -2,9 +2,11 @@ import { apiFetch } from "./http";
 
 export type Paiement = {
   id: number;
-  methode: "orange_money" | "mvola" | "airtel_money";
+  methode: "orange_money" | "mvola" | "airtel_money" | null;
   montant: number;
+  checkout_url: string | null;
   statut_mobile_money: "en_attente" | "confirme" | "echoue";
+  erreur_gateway: string | null;
   created_at: string;
 };
 
@@ -39,10 +41,7 @@ export async function creerFacture(payload: {
   return res.data;
 }
 
-export async function initierPaiement(payload: {
-  facture_id: number;
-  methode: "orange_money" | "mvola" | "airtel_money";
-}): Promise<Paiement> {
+export async function initierPaiement(payload: { facture_id: number }): Promise<Paiement> {
   const res = await apiFetch<{ success: boolean; data: Paiement }>("/api/paiements", {
     method: "POST",
     body: JSON.stringify(payload),

@@ -28,12 +28,6 @@ const LIBELLE_STATUT_PAIEMENT: Record<
   echoue: { label: "Échoué", variant: "destructive" },
 };
 
-const LIBELLE_METHODE: Record<string, string> = {
-  orange_money: "Orange Money",
-  mvola: "Mvola",
-  airtel_money: "Airtel Money",
-};
-
 function FacturesClient() {
   const { data: factures = [], isLoading } = useQuery({
     queryKey: ["mes-factures"],
@@ -75,8 +69,8 @@ function FacturesClient() {
               </span>
               <p className="text-sm font-medium text-foreground">Aucune facture pour l'instant</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Déclarez une facture ou achetez un crédit prépayé pour le régler par Orange Money,
-                Mvola ou Airtel Money.
+                Déclarez une facture ou achetez un crédit prépayé pour le régler avec GoalPay
+                (Orange Money ou Telma).
               </p>
             </div>
           ) : (
@@ -87,7 +81,7 @@ function FacturesClient() {
                   <TableHead>Référence</TableHead>
                   <TableHead>Titulaire / Compteur</TableHead>
                   <TableHead>Montant</TableHead>
-                  <TableHead>Méthode</TableHead>
+                  <TableHead>Paiement</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
@@ -108,9 +102,7 @@ function FacturesClient() {
                         {f.type === "carte" ? f.numero_compteur : f.nom_titulaire}
                       </TableCell>
                       <TableCell>{f.montant_du.toLocaleString("fr-FR")} Ar</TableCell>
-                      <TableCell>
-                        {dernierPaiement ? LIBELLE_METHODE[dernierPaiement.methode] : "—"}
-                      </TableCell>
+                      <TableCell>{dernierPaiement ? "GoalPay" : "—"}</TableCell>
                       <TableCell>
                         {statut ? (
                           <Badge variant={statut.variant}>{statut.label}</Badge>
@@ -136,7 +128,7 @@ function FacturesClient() {
             </span>
             <div>
               <p className="text-sm font-medium text-foreground">Paiement mobile money</p>
-              <p className="text-xs text-muted-foreground">Orange Money, Mvola et Airtel Money.</p>
+              <p className="text-xs text-muted-foreground">Avec GoalPay : Orange Money et Telma.</p>
             </div>
           </CardContent>
         </Card>

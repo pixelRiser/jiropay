@@ -16,6 +16,9 @@ import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitiali
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedEspaceRouteRouteImport } from './routes/_authenticated/espace/route'
 import { Route as AuthenticatedGuichetRouteRouteImport } from './routes/_authenticated/guichet/route'
+import { Route as PaiementAnnuleRouteImport } from './routes/paiement.annule'
+import { Route as PaiementEchecRouteImport } from './routes/paiement.echec'
+import { Route as PaiementSuccesRouteImport } from './routes/paiement.succes'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminAgentsRouteImport } from './routes/_authenticated/admin/agents'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin/clients'
@@ -66,6 +69,21 @@ const AuthenticatedGuichetRouteRoute =
     path: '/guichet',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const PaiementAnnuleRoute = PaiementAnnuleRouteImport.update({
+  id: '/paiement/annule',
+  path: '/paiement/annule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaiementEchecRoute = PaiementEchecRouteImport.update({
+  id: '/paiement/echec',
+  path: '/paiement/echec',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaiementSuccesRoute = PaiementSuccesRouteImport.update({
+  id: '/paiement/succes',
+  path: '/paiement/succes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -151,6 +169,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/espace': typeof AuthenticatedEspaceRouteRouteWithChildren
   '/guichet': typeof AuthenticatedGuichetRouteRouteWithChildren
+  '/paiement/annule': typeof PaiementAnnuleRoute
+  '/paiement/echec': typeof PaiementEchecRoute
+  '/paiement/succes': typeof PaiementSuccesRoute
   '/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
@@ -169,6 +190,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/paiement/annule': typeof PaiementAnnuleRoute
+  '/paiement/echec': typeof PaiementEchecRoute
+  '/paiement/succes': typeof PaiementSuccesRoute
   '/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
@@ -192,6 +216,9 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/espace': typeof AuthenticatedEspaceRouteRouteWithChildren
   '/_authenticated/guichet': typeof AuthenticatedGuichetRouteRouteWithChildren
+  '/paiement/annule': typeof PaiementAnnuleRoute
+  '/paiement/echec': typeof PaiementEchecRoute
+  '/paiement/succes': typeof PaiementSuccesRoute
   '/_authenticated/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/_authenticated/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
@@ -215,6 +242,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/espace'
     | '/guichet'
+    | '/paiement/annule'
+    | '/paiement/echec'
+    | '/paiement/succes'
     | '/admin/agents'
     | '/admin/clients'
     | '/admin/guichets'
@@ -233,6 +263,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reinitialiser-mot-de-passe'
+    | '/paiement/annule'
+    | '/paiement/echec'
+    | '/paiement/succes'
     | '/admin/agents'
     | '/admin/clients'
     | '/admin/guichets'
@@ -255,6 +288,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/espace'
     | '/_authenticated/guichet'
+    | '/paiement/annule'
+    | '/paiement/echec'
+    | '/paiement/succes'
     | '/_authenticated/admin/agents'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/guichets'
@@ -275,6 +311,9 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
+  PaiementAnnuleRoute: typeof PaiementAnnuleRoute
+  PaiementEchecRoute: typeof PaiementEchecRoute
+  PaiementSuccesRoute: typeof PaiementSuccesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -327,6 +366,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/guichet'
       preLoaderRoute: typeof AuthenticatedGuichetRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/paiement/annule': {
+      id: '/paiement/annule'
+      path: '/paiement/annule'
+      fullPath: '/paiement/annule'
+      preLoaderRoute: typeof PaiementAnnuleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paiement/echec': {
+      id: '/paiement/echec'
+      path: '/paiement/echec'
+      fullPath: '/paiement/echec'
+      preLoaderRoute: typeof PaiementEchecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paiement/succes': {
+      id: '/paiement/succes'
+      path: '/paiement/succes'
+      fullPath: '/paiement/succes'
+      preLoaderRoute: typeof PaiementSuccesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -504,6 +564,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
+  PaiementAnnuleRoute: PaiementAnnuleRoute,
+  PaiementEchecRoute: PaiementEchecRoute,
+  PaiementSuccesRoute: PaiementSuccesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

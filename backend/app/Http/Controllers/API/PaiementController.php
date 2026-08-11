@@ -5,18 +5,19 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Facture;
 use App\Models\Paiement;
+use App\Services\GoalpayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaiementController extends Controller
 {
     /**
-     * Initie un paiement mobile money pour une facture du client connecté.
-     * Aucune API Orange Money/Mvola/Airtel Money n'est encore branchée — le
-     * paiement est enregistré "en_attente" (voir §6 du cahier des charges :
-     * un paiement mobile money peut rester en attente un moment avant
-     * confirmation). La confirmation automatique arrive avec l'intégration
-     * des API opérateurs, phase suivante.
+     * Initie un paiement GoalPay (Orange Money, Telma/Mvola) pour une
+     * facture du client connecté. Crée le paiement "en_attente", crée la
+     * commande GoalPay, puis renvoie le checkout_url vers lequel le
+     * frontend redirige le client — c'est GoalPay qui propose le choix de
+     * l'opérateur, pas JiroPay. La confirmation arrive par webhook
+     * (GoalpayWebhookController), jamais par le retour navigateur.
      */
     public function initier(Request $request): JsonResponse
     {
@@ -25,12 +26,9 @@ class PaiementController extends Controller
 
         $validated = $request->validate([
             'facture_id' => 'required|integer|exists:factures,id',
-            'methode'    => 'required|in:orange_money,mvola,airtel_money',
         ], [
             'facture_id.required' => 'La facture est obligatoire.',
-            'facture_id.exists'   => 'Facture introuvable.',
-            'methode.required'    => 'La méthode de paiement est obligatoire.',
-            'methode.in'          => 'Méthode de paiement invalide.',
+            'facture_id.exists' => 'Facture introuvable.',
         ]);
 
         $facture = Facture::where('id', $validated['facture_id'])
@@ -43,15 +41,36 @@ class PaiementController extends Controller
         abort_if($dejaEnCours, 422, 'Un paiement est déjà en cours ou confirmé pour cette facture.');
 
         $paiement = Paiement::create([
-            'facture_id'             => $facture->id,
-            'client_id'              => $client->id,
-            'guichet_referent_id'    => $client->guichet_referent_id,
-            'initiateur'             => 'client',
-            'methode'                => $validated['methode'],
-            'montant'                => $facture->montant_du,
-            'statut_mobile_money'    => 'en_attente',
+            'facture_id' => $facture->id,
+            'client_id' => $client->id,
+            'guichet_referent_id' => $client->guichet_referent_id,
+            'initiateur' => 'client',
+            'montant' => $facture->montant_du,
+            'statut_mobile_money' => 'en_attente',
         ]);
 
-        return response()->json(['success' => true, 'data' => $paiement], 201);
+        $goalpay = new GoalpayService();
+        $reference = $goalpay->genererReferencePaiement($paiement->id);
+        $description = $facture->type === 'carte'
+            ? "Achat crédit JIRAMA — compteur {$facture->numero_compteur}"
+            : "Paiement facture JIRAMA — {$facture->reference_facture}";
+
+        $resultat = $goalpay->creerCommande($facture->montant_du, $reference, $description);
+
+        if (! $resultat['success']) {
+            $paiement->update([
+                'statut_mobile_money' => 'echoue',
+                'erreur_gateway' => $resultat['message'],
+            ]);
+
+            return response()->json(['success' => false, 'message' => $resultat['message']], 502);
+        }
+
+        $paiement->update([
+            'reference_mobile_money' => $resultat['order_reference'],
+            'checkout_url' => $resultat['checkout_url'],
+        ]);
+
+        return response()->json(['success' => true, 'data' => $paiement->fresh()], 201);
     }
 }

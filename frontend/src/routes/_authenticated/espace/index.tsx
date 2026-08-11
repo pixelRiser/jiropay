@@ -140,9 +140,9 @@ function EspaceDashboard() {
                 <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Smartphone className="size-4" />
                 </span>
-                <p className="text-sm font-medium text-foreground">2. Payez par mobile money</p>
+                <p className="text-sm font-medium text-foreground">2. Payez avec GoalPay</p>
                 <p className="text-xs text-muted-foreground">
-                  Orange Money, Mvola ou Airtel Money, depuis votre téléphone.
+                  Choisissez Orange Money ou Telma sur la page GoalPay, depuis votre téléphone.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
