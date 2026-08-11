@@ -44,42 +44,59 @@ function EspaceDashboard() {
       />
 
       <p className="mt-2 text-sm text-muted-foreground">
-        Reconnaissez votre document JIRAMA ci-dessous et cliquez sur la card correspondante.
+        Regardez le document JIRAMA que vous avez en main et repérez ses caractéristiques ci-dessous
+        pour choisir la bonne card.
       </p>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <Link to="/espace/payer-facture">
           <Card className="h-full cursor-pointer overflow-hidden border-primary/20 bg-primary/5 transition-colors hover:bg-primary/10">
-            <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-64 items-center justify-center bg-white p-3">
               <img
                 src="/guides/payer-facture.jpeg"
-                alt="Exemple de facture JIRAMA à payer"
-                className="h-28 w-20 shrink-0 rounded-md border object-cover"
+                alt="Exemple de facture JIRAMA papier à payer, format A4"
+                className="max-h-full max-w-full rounded object-contain shadow-sm"
               />
-              <div className="flex-1">
+            </div>
+            <CardContent className="p-4">
+              <div className="mb-2 flex items-center justify-between">
                 <p className="font-semibold text-foreground">Payer une facture</p>
-                <p className="text-sm text-muted-foreground">
-                  Vous avez une facture JIRAMA papier (électricité/eau) en main
-                </p>
+                <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
               </div>
-              <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                C'est votre document si vous voyez :
+              </p>
+              <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                <li>Une grande feuille A4, format facture classique</li>
+                <li>"JIRO SY RANO MALAGASY" écrit en haut</li>
+                <li>Un tableau détaillé électricité et eau</li>
+                <li>Un montant "NET À PAYER" en bas</li>
+              </ul>
             </CardContent>
           </Card>
         </Link>
         <Link to="/espace/facture-carte">
           <Card className="h-full cursor-pointer overflow-hidden transition-colors hover:bg-accent/50">
-            <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-64 items-center justify-center bg-white p-3">
               <img
                 src="/guides/facture-carte.jpeg"
-                alt="Exemple de ticket de recharge prépayée JIRAMA"
-                className="h-28 w-20 shrink-0 rounded-md border object-cover"
+                alt="Exemple de ticket de recharge prépayée JIRAMA, petit format"
+                className="max-h-full max-w-full rounded object-contain shadow-sm"
               />
-              <div className="flex-1">
+            </div>
+            <CardContent className="p-4">
+              <div className="mb-2 flex items-center justify-between">
                 <p className="font-semibold text-foreground">Acheter facture carte</p>
-                <p className="text-sm text-muted-foreground">
-                  Vous avez un ticket de recharge prépayée (compteur) en main
-                </p>
+                <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
               </div>
-              <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                C'est votre document si vous voyez :
+              </p>
+              <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                <li>Un petit ticket étroit, comme un reçu de caisse</li>
+                <li>"TICKET D'ACQUIT" écrit en haut</li>
+                <li>Un numéro de compteur (installation)</li>
+                <li>Une mention "Prépayé"</li>
+              </ul>
             </CardContent>
           </Card>
         </Link>
