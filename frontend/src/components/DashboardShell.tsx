@@ -29,7 +29,7 @@ export function DashboardShell({ role, navItems, children }: Props) {
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-64 shrink-0 flex-col border-r bg-card">
         <div className="flex flex-col gap-1 border-b px-4 py-4">
-          <BrandMark className="h-6" />
+          <BrandMark height={24} />
           <p className="text-xs font-normal text-muted-foreground">{LIBELLE_ROLE[role]}</p>
         </div>
 
