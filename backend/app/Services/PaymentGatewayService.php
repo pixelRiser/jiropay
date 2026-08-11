@@ -46,15 +46,17 @@ class PaymentGatewayService
     }
 
     /**
-     * Endpoint de création de commande selon le mode.
-     * Sandbox : /api/sandbox/payement/service
-     * Production : /api/payement/service
+     * Un seul endpoint pour sandbox et production — la doc GoalPay ne
+     * documente aucun chemin /sandbox/ séparé. Le mode est déterminé
+     * uniquement par le token envoyé dans "access" (TGPT_... = test,
+     * TGP_... = production). Un chemin /api/sandbox/... a existé dans une
+     * intégration GoalPay antérieure ailleurs mais a été confirmé invalide
+     * ici (GoalPay répond 422 "The selected access is invalid" avec un
+     * token TGPT_ sur ce chemin) — ne pas le réintroduire.
      */
     private function paymentEndpoint(): string
     {
-        return $this->sandbox
-            ? $this->apiUrl.'/api/sandbox/payement/service'
-            : $this->apiUrl.'/api/payement/service';
+        return $this->apiUrl.'/api/payement/service';
     }
 
     /**

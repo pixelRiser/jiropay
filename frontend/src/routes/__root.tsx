@@ -89,7 +89,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Payez votre facture JIRAMA par mobile money et recevez votre reçu dans votre compte.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://jiropay.pixel-rise.com/logos/jiropay-logo.png" },
+      { property: "og:image:width", content: "652" },
+      { property: "og:image:height", content: "383" },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:image",
+        content: "https://jiropay.pixel-rise.com/logos/jiropay-logo.png",
+      },
     ],
     links: [
       {
@@ -97,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/logos/jiropay-icon-512.png" },
     ],
   }),
   shellComponent: RootShell,
