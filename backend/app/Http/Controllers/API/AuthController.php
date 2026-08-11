@@ -148,6 +148,30 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'data' => $this->userPayload(Auth::user())]);
     }
 
+    /**
+     * Modifie son propre profil (nom/email/téléphone) — action générique,
+     * réutilisable par les 3 rôles ("Mon profil" côté admin/guichet/client).
+     * Le rattachement guichet/rôle/statut ne se change jamais ici — ce sont
+     * des changements administratifs distincts (voir Admin\AgentController,
+     * ClientController::updateGuichet).
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'sometimes|string|max:30',
+        ], [
+            'email.unique' => 'Un compte existe déjà avec cet email.',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json(['success' => true, 'data' => $this->userPayload($user->fresh())]);
+    }
+
     public function changePassword(Request $request): JsonResponse
     {
         $validated = $request->validate([

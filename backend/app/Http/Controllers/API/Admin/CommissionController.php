@@ -36,4 +36,34 @@ class CommissionController extends Controller
             'solde_par_guichet' => $soldeParGuichet,
         ]);
     }
+
+    public function show(Commission $commission): JsonResponse
+    {
+        $commission->load([
+            'guichet',
+            'paiement.facture',
+            'paiement.client.user:id,name,email,phone',
+        ]);
+
+        return response()->json(['success' => true, 'data' => $commission]);
+    }
+
+    /**
+     * Marque une commission comme reversée au guichet (hors plateforme —
+     * aucun virement automatique, juste la traçabilité du grand livre) et
+     * décrémente le solde non reversé du guichet d'autant. Pas de
+     * suppression possible sur une commission — c'est une écriture de grand
+     * livre immuable, seul son statut évolue (même philosophie que les
+     * reversements pixel-rise : jamais automatique, toujours une action
+     * délibérée et traçable).
+     */
+    public function reverser(Commission $commission): JsonResponse
+    {
+        abort_unless($commission->statut === 'creditee', 422, 'Cette commission est déjà reversée.');
+
+        $commission->update(['statut' => 'reversee']);
+        $commission->guichet()->decrement('solde_commission', $commission->montant_commission);
+
+        return response()->json(['success' => true, 'data' => $commission->fresh('guichet')]);
+    }
 }

@@ -16,6 +16,25 @@ class GuichetController extends Controller
         return response()->json(['success' => true, 'data' => $guichets]);
     }
 
+    /**
+     * Détail d'un guichet — agents rattachés, clients récents, commissions
+     * récentes. Distinct de index() qui ne sert que la liste.
+     */
+    public function show(Guichet $guichet): JsonResponse
+    {
+        $guichet->loadCount(['clients', 'commissions']);
+        $guichet->load([
+            'agents:id,name,email,phone,status,guichet_id',
+            'clients' => fn ($q) => $q->with('user:id,name,email')->latest()->limit(10),
+            'commissions' => fn ($q) => $q->with([
+                'paiement.facture',
+                'paiement.client.user:id,name,email',
+            ])->latest()->limit(10),
+        ]);
+
+        return response()->json(['success' => true, 'data' => $guichet]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -50,5 +69,32 @@ class GuichetController extends Controller
         $guichet->update($validated);
 
         return response()->json(['success' => true, 'data' => $guichet]);
+    }
+
+    /**
+     * Supprime un guichet — uniquement s'il n'a jamais eu de client, paiement,
+     * commission ou agent rattaché (contrainte FK RESTRICT en base pour
+     * clients/paiements/commissions, mais on renvoie un message clair plutôt
+     * qu'une erreur SQL brute ; les agents ont un FK nullOnDelete donc ne
+     * bloqueraient pas la suppression en base — on le bloque quand même côté
+     * appli pour ne jamais orpheliner un compte agent silencieusement). Un
+     * guichet déjà utilisé doit être désactivé (statut=inactif), jamais
+     * supprimé — ça casserait l'historique des clients/paiements qui le
+     * référencent.
+     */
+    public function destroy(Guichet $guichet): JsonResponse
+    {
+        $guichet->loadCount(['clients', 'commissions', 'agents']);
+        $aDesPaiements = $guichet->paiements()->exists();
+
+        abort_if(
+            $guichet->clients_count > 0 || $guichet->commissions_count > 0 || $guichet->agents_count > 0 || $aDesPaiements,
+            422,
+            'Ce guichet a des clients, agents, paiements ou commissions rattachés — impossible de le supprimer. Désactivez-le plutôt (statut inactif).'
+        );
+
+        $guichet->delete();
+
+        return response()->json(['success' => true]);
     }
 }

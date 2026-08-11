@@ -6,8 +6,12 @@ import {
   listeGuichetsAdmin,
   creerGuichet,
   majGuichet,
+  detailGuichet,
+  supprimerGuichet,
   type GuichetDetail,
 } from "@/lib/jiropay/admin-api";
+import { ApiError } from "@/lib/jiropay/http";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,8 +39,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Store, Pencil, Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Store, Pencil, Plus, MoreVertical, Eye, Trash2, Wallet } from "lucide-react";
+
+function messageErreur(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const payload = error.payload as { message?: string } | undefined;
+    return payload?.message ?? error.message ?? fallback;
+  }
+  return fallback;
+}
 
 export const Route = createFileRoute("/_authenticated/admin/guichets")({
   component: GuichetsAdmin,
@@ -48,8 +67,36 @@ function GuichetsAdmin() {
     queryKey: ["admin-guichets"],
     queryFn: listeGuichetsAdmin,
   });
+  const confirm = useConfirm();
   const [dialogCreationOuvert, setDialogCreationOuvert] = useState(false);
   const [guichetEnEdition, setGuichetEnEdition] = useState<GuichetDetail | null>(null);
+  const [guichetIdEnDetail, setGuichetIdEnDetail] = useState<number | null>(null);
+
+  const { data: detail, isLoading: detailEnChargement } = useQuery({
+    queryKey: ["admin-guichet-detail", guichetIdEnDetail],
+    queryFn: () => detailGuichet(guichetIdEnDetail!),
+    enabled: guichetIdEnDetail !== null,
+  });
+
+  const supprimerMutation = useMutation({
+    mutationFn: supprimerGuichet,
+    onSuccess: () => {
+      toast.success("Guichet supprimé.");
+      queryClient.invalidateQueries({ queryKey: ["admin-guichets"] });
+    },
+    onError: (error) => toast.error(messageErreur(error, "Impossible de supprimer ce guichet.")),
+  });
+
+  async function demanderSuppression(g: GuichetDetail) {
+    const ok = await confirm({
+      titre: `Supprimer ${g.nom} ?`,
+      description:
+        "Cette action est irréversible. Impossible si ce guichet a des clients, agents, paiements ou commissions rattachés — désactivez-le plutôt dans ce cas.",
+      confirmLabel: "Supprimer",
+      destructif: true,
+    });
+    if (ok) supprimerMutation.mutate(g.id);
+  }
 
   const [nom, setNom] = useState("");
   const [lieu, setLieu] = useState("");
@@ -234,9 +281,30 @@ function GuichetsAdmin() {
                     <TableCell>{g.clients_count ?? 0}</TableCell>
                     <TableCell>{g.solde_commission.toLocaleString("fr-FR")} Ar</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => setGuichetEnEdition(g)}>
-                        <Pencil className="size-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setGuichetIdEnDetail(g.id)}>
+                            <Eye className="mr-2 size-4" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setGuichetEnEdition(g)}>
+                            <Pencil className="mr-2 size-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => demanderSuppression(g)}
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -330,6 +398,102 @@ function GuichetsAdmin() {
                 Enregistrer les modifications
               </Button>
             </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={guichetIdEnDetail !== null}
+        onOpenChange={(open) => !open && setGuichetIdEnDetail(null)}
+      >
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{detail?.nom ?? "Détail du guichet"}</DialogTitle>
+            <DialogDescription>{detail?.lieu}</DialogDescription>
+          </DialogHeader>
+          {detailEnChargement ? (
+            <p className="text-sm text-muted-foreground">Chargement…</p>
+          ) : detail ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Clients</p>
+                  <p className="text-lg font-semibold">{detail.clients_count ?? 0}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Agents</p>
+                  <p className="text-lg font-semibold">{detail.agents.length}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Solde</p>
+                  <p className="text-lg font-semibold">
+                    {detail.solde_commission.toLocaleString("fr-FR")} Ar
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Statut</p>
+                  <Badge variant={detail.statut === "actif" ? "default" : "secondary"}>
+                    {detail.statut}
+                  </Badge>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-foreground">Agents rattachés</h3>
+                {detail.agents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucun agent pour l'instant.</p>
+                ) : (
+                  <ul className="space-y-1 text-sm">
+                    {detail.agents.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between">
+                        <span>
+                          {a.name} — {a.email}
+                        </span>
+                        <Badge variant="outline">{a.status}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-foreground">
+                  Clients récents ({detail.clients.length})
+                </h3>
+                {detail.clients.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucun client pour l'instant.</p>
+                ) : (
+                  <ul className="space-y-1 text-sm">
+                    {detail.clients.map((c) => (
+                      <li key={c.id}>
+                        {c.user.name} — {c.user.email}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <Wallet className="size-4" />
+                  Commissions récentes ({detail.commissions.length})
+                </h3>
+                {detail.commissions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucune commission pour l'instant.</p>
+                ) : (
+                  <ul className="space-y-1 text-sm">
+                    {detail.commissions.map((c) => (
+                      <li key={c.id} className="flex items-center justify-between">
+                        <span>{c.paiement.client.user.name}</span>
+                        <span className="font-medium">
+                          {c.montant_commission.toLocaleString("fr-FR")} Ar
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           ) : null}
         </DialogContent>
       </Dialog>

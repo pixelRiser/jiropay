@@ -103,8 +103,8 @@ export async function creerClient(payload: {
   email: string;
   phone: string;
   numero_abonne_jirama: string;
-  adresse?: string;
-  guichet_id?: number;
+  adresse?: string | undefined;
+  guichet_id?: number | undefined;
 }): Promise<void> {
   await apiFetch("/api/clients", {
     method: "POST",
@@ -235,4 +235,163 @@ export type PaiementGuichet = {
 export async function mesPaiementsGuichet(): Promise<PaiementGuichet[]> {
   const res = await apiFetch<{ success: boolean; data: PaiementGuichet[] }>("/api/mes-paiements");
   return res.data;
+}
+
+// --- Guichets : détail + suppression ---
+
+export type GuichetDetailComplet = GuichetDetail & {
+  agents: { id: number; name: string; email: string; phone: string | null; status: string }[];
+  clients: { id: number; user: { id: number; name: string; email: string }; created_at: string }[];
+  commissions: {
+    id: number;
+    montant_commission: number;
+    statut: "creditee" | "reversee";
+    created_at: string;
+    paiement: { client: { user: { name: string } } };
+  }[];
+};
+
+export async function detailGuichet(id: number): Promise<GuichetDetailComplet> {
+  const res = await apiFetch<{ success: boolean; data: GuichetDetailComplet }>(
+    `/api/admin/guichets/${id}`,
+  );
+  return res.data;
+}
+
+export async function supprimerGuichet(id: number): Promise<void> {
+  await apiFetch(`/api/admin/guichets/${id}`, { method: "DELETE" });
+}
+
+// --- Clients : détail, modification, création, suppression ---
+
+export type ClientDetailComplet = ClientDetail & {
+  factures: { id: number; type: string; montant_du: number; statut: string; created_at: string }[];
+  paiements: {
+    id: number;
+    montant: number;
+    statut_mobile_money: string;
+    created_at: string;
+    facture: { type: string; reference_facture: string | null };
+  }[];
+};
+
+export async function detailClient(id: number): Promise<ClientDetailComplet> {
+  const res = await apiFetch<{ success: boolean; data: ClientDetailComplet }>(
+    `/api/admin/clients/${id}`,
+  );
+  return res.data;
+}
+
+export async function modifierClient(
+  id: number,
+  payload: Partial<{
+    name: string;
+    email: string;
+    phone: string;
+    numero_abonne_jirama: string;
+    adresse: string;
+  }>,
+): Promise<void> {
+  await apiFetch(`/api/admin/clients/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export async function supprimerClient(id: number): Promise<void> {
+  await apiFetch(`/api/admin/clients/${id}`, { method: "DELETE" });
+}
+
+// --- Agents : liste complète, détail, modification, suppression ---
+
+export type AgentDetail = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  guichet_id: number | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  guichet: { id: number; nom: string; lieu: string } | null;
+};
+
+export async function listeAgents(): Promise<AgentDetail[]> {
+  const res = await apiFetch<{ success: boolean; data: AgentDetail[] }>("/api/admin/agents");
+  return res.data;
+}
+
+export async function modifierAgent(
+  id: number,
+  payload: Partial<{
+    name: string;
+    email: string;
+    phone: string;
+    guichet_id: number;
+    status: "pending" | "approved" | "rejected";
+  }>,
+): Promise<void> {
+  await apiFetch(`/api/admin/agents/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export async function supprimerAgent(id: number): Promise<void> {
+  await apiFetch(`/api/admin/agents/${id}`, { method: "DELETE" });
+}
+
+// --- Paiements (admin, vue complète) ---
+
+export type PaiementAdminDetail = {
+  id: number;
+  montant: number;
+  montant_frais: number | null;
+  montant_commission: number | null;
+  methode: "orange_money" | "mvola";
+  statut_mobile_money: "en_attente" | "confirme" | "echoue";
+  date_paiement: string | null;
+  created_at: string;
+  facture: {
+    id: number;
+    type: "facture" | "carte";
+    reference_facture: string | null;
+    montant_du: number;
+  };
+  client: { user: { id: number; name: string; email: string } };
+  guichet_referent: { id: number; nom: string; lieu: string };
+  paiement_jirama: { id: number; date_saisie: string } | null;
+  commission: { id: number; montant_commission: number } | null;
+};
+
+export async function listePaiementsAdmin(): Promise<PaiementAdminDetail[]> {
+  const res = await apiFetch<{ success: boolean; data: PaiementAdminDetail[] }>(
+    "/api/admin/paiements",
+  );
+  return res.data;
+}
+
+export async function corrigerStatutPaiement(
+  id: number,
+  statut: "confirme" | "echoue",
+): Promise<void> {
+  await apiFetch(`/api/admin/paiements/${id}/statut`, {
+    method: "PATCH",
+    body: JSON.stringify({ statut_mobile_money: statut }),
+  });
+}
+
+export async function supprimerPaiement(id: number): Promise<void> {
+  await apiFetch(`/api/admin/paiements/${id}`, { method: "DELETE" });
+}
+
+// --- Commissions : reverser ---
+
+export async function reverserCommission(id: number): Promise<void> {
+  await apiFetch(`/api/admin/commissions/${id}/reverser`, { method: "POST" });
+}
+
+// --- Profil (tous rôles) ---
+
+export async function modifierMonProfil(
+  payload: Partial<{
+    name: string;
+    email: string;
+    phone: string;
+  }>,
+): Promise<void> {
+  await apiFetch("/api/profil", { method: "PATCH", body: JSON.stringify(payload) });
 }

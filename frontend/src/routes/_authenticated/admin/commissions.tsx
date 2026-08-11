@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { listeCommissions } from "@/lib/jiropay/admin-api";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { listeCommissions, reverserCommission } from "@/lib/jiropay/admin-api";
+import { ApiError } from "@/lib/jiropay/http";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -12,13 +16,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Wallet, PiggyBank } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Wallet, PiggyBank, MoreVertical, Undo2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/commissions")({
   component: CommissionsAdmin,
 });
 
+function messageErreur(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const payload = error.payload as { message?: string } | undefined;
+    return payload?.message ?? error.message ?? fallback;
+  }
+  return fallback;
+}
+
 function CommissionsAdmin() {
+  const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-commissions"],
     queryFn: listeCommissions,
@@ -26,6 +46,26 @@ function CommissionsAdmin() {
 
   const commissions = data?.data ?? [];
   const soldeParGuichet = data?.solde_par_guichet ?? [];
+
+  const reverserMutation = useMutation({
+    mutationFn: reverserCommission,
+    onSuccess: () => {
+      toast.success("Commission marquée comme reversée.");
+      queryClient.invalidateQueries({ queryKey: ["admin-commissions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-guichets"] });
+    },
+    onError: (error) =>
+      toast.error(messageErreur(error, "Impossible de reverser cette commission.")),
+  });
+
+  async function demanderReversement(id: number, nomGuichet: string, montant: number) {
+    const ok = await confirm({
+      titre: `Marquer cette commission comme reversée ?`,
+      description: `${montant.toLocaleString("fr-FR")} Ar seront retirés du solde non reversé de ${nomGuichet}. Ceci ne déclenche aucun virement — c'est une trace comptable, le versement réel se fait hors plateforme.`,
+      confirmLabel: "Marquer reversée",
+    });
+    if (ok) reverserMutation.mutate(id);
+  }
 
   return (
     <>
@@ -113,6 +153,7 @@ function CommissionsAdmin() {
                   <TableHead>Commission guichet</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,6 +179,27 @@ function CommissionsAdmin() {
                       </Badge>
                     </TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString("fr-FR")}</TableCell>
+                    <TableCell className="text-right">
+                      {c.statut === "creditee" ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                demanderReversement(c.id, c.guichet.nom, c.montant_commission)
+                              }
+                            >
+                              <Undo2 className="mr-2 size-4" />
+                              Marquer reversée
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

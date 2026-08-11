@@ -24,4 +24,5 @@ Route::post('email/resend', [AuthController::class, 'resendVerification'])
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('change-password', [AuthController::class, 'changePassword']);
+    Route::patch('profil', [AuthController::class, 'updateProfile']);
 });

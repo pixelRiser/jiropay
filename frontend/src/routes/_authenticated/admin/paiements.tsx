@@ -5,10 +5,15 @@ import { toast } from "sonner";
 import {
   paiementsEnAttenteTicket,
   creerTicketJirama,
+  listePaiementsAdmin,
+  corrigerStatutPaiement,
+  supprimerPaiement,
   type PaiementEnAttenteTicket,
   type TicketJiramaPayload,
+  type PaiementAdminDetail,
 } from "@/lib/jiropay/admin-api";
 import { ApiError } from "@/lib/jiropay/http";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +35,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ReceiptText, FileText } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ReceiptText,
+  FileText,
+  MoreVertical,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Trash2,
+  ListChecks,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/paiements")({
   component: PaiementsAdmin,
@@ -79,14 +99,27 @@ const CHAMPS_VIDES: TicketJiramaPayload = {
   frais_operateur: undefined,
 };
 
+function badgeStatutPaiement(statut: PaiementAdminDetail["statut_mobile_money"]) {
+  if (statut === "confirme") return <Badge>Confirmé</Badge>;
+  if (statut === "echoue") return <Badge variant="destructive">Échoué</Badge>;
+  return <Badge variant="secondary">En attente</Badge>;
+}
+
 function PaiementsAdmin() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [paiementActif, setPaiementActif] = useState<PaiementEnAttenteTicket | null>(null);
   const [champs, setChamps] = useState<TicketJiramaPayload>(CHAMPS_VIDES);
+  const [paiementEnDetail, setPaiementEnDetail] = useState<PaiementAdminDetail | null>(null);
 
   const { data: paiements = [], isLoading } = useQuery({
     queryKey: ["admin-paiements-en-attente-ticket"],
     queryFn: paiementsEnAttenteTicket,
+  });
+
+  const { data: tousLesPaiements = [], isLoading: chargementTous } = useQuery({
+    queryKey: ["admin-paiements-tous"],
+    queryFn: listePaiementsAdmin,
   });
 
   const creerMutation = useMutation({
@@ -94,10 +127,62 @@ function PaiementsAdmin() {
     onSuccess: () => {
       toast.success("Ticket enregistré — la facture est marquée réglée auprès de JIRAMA.");
       queryClient.invalidateQueries({ queryKey: ["admin-paiements-en-attente-ticket"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-paiements-tous"] });
       setPaiementActif(null);
     },
     onError: (error) => toast.error(messageErreur(error, "Impossible d'enregistrer ce ticket.")),
   });
+
+  function invaliderTous() {
+    queryClient.invalidateQueries({ queryKey: ["admin-paiements-tous"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-paiements-en-attente-ticket"] });
+  }
+
+  const corrigerMutation = useMutation({
+    mutationFn: (payload: { id: number; statut: "confirme" | "echoue" }) =>
+      corrigerStatutPaiement(payload.id, payload.statut),
+    onSuccess: () => {
+      toast.success("Statut corrigé.");
+      invaliderTous();
+    },
+    onError: (error) => toast.error(messageErreur(error, "Impossible de corriger ce paiement.")),
+  });
+
+  const supprimerMutation = useMutation({
+    mutationFn: supprimerPaiement,
+    onSuccess: () => {
+      toast.success("Paiement supprimé.");
+      invaliderTous();
+    },
+    onError: (error) => toast.error(messageErreur(error, "Impossible de supprimer ce paiement.")),
+  });
+
+  async function demanderCorrection(p: PaiementAdminDetail, statut: "confirme" | "echoue") {
+    const ok = await confirm({
+      titre:
+        statut === "confirme"
+          ? "Marquer ce paiement comme confirmé ?"
+          : "Marquer ce paiement comme échoué ?",
+      description:
+        statut === "confirme"
+          ? "À utiliser uniquement si le paiement a réellement été reçu mais que la confirmation automatique (webhook) n'est jamais arrivée. La commission du guichet sera créditée."
+          : "Ce paiement ne sera plus considéré comme en attente.",
+      confirmLabel: "Confirmer",
+      destructif: statut === "echoue",
+    });
+    if (ok) corrigerMutation.mutate({ id: p.id, statut });
+  }
+
+  async function demanderSuppressionPaiement(p: PaiementAdminDetail) {
+    const ok = await confirm({
+      titre: "Supprimer ce paiement ?",
+      description:
+        "Cette action est irréversible. Impossible si ce paiement a une commission ou un ticket JIRAMA rattaché.",
+      confirmLabel: "Supprimer",
+      destructif: true,
+    });
+    if (ok) supprimerMutation.mutate(p.id);
+  }
 
   function ouvrirFormulaire(p: PaiementEnAttenteTicket) {
     setPaiementActif(p);
@@ -195,6 +280,146 @@ function PaiementsAdmin() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ListChecks className="size-5" />
+            Tous les paiements ({tousLesPaiements.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chargementTous ? (
+            <p className="text-sm text-muted-foreground">Chargement…</p>
+          ) : tousLesPaiements.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Aucun paiement enregistré pour l'instant.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Guichet</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Méthode</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tousLesPaiements.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.client.user.name}</TableCell>
+                    <TableCell>{p.guichet_referent.nom}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {p.facture.type === "carte" ? "Carte" : "Facture"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{p.montant.toLocaleString("fr-FR")} Ar</TableCell>
+                    <TableCell>{p.methode === "mvola" ? "Mvola" : "Orange Money"}</TableCell>
+                    <TableCell>{badgeStatutPaiement(p.statut_mobile_money)}</TableCell>
+                    <TableCell>{new Date(p.created_at).toLocaleDateString("fr-FR")}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setPaiementEnDetail(p)}>
+                            <Eye className="mr-2 size-4" />
+                            Voir
+                          </DropdownMenuItem>
+                          {p.statut_mobile_money === "en_attente" ? (
+                            <>
+                              <DropdownMenuItem onClick={() => demanderCorrection(p, "confirme")}>
+                                <CheckCircle2 className="mr-2 size-4" />
+                                Marquer confirmé
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => demanderCorrection(p, "echoue")}>
+                                <XCircle className="mr-2 size-4" />
+                                Marquer échoué
+                              </DropdownMenuItem>
+                            </>
+                          ) : null}
+                          {!p.commission && !p.paiement_jirama ? (
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => demanderSuppressionPaiement(p)}
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!paiementEnDetail} onOpenChange={(open) => !open && setPaiementEnDetail(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Paiement — {paiementEnDetail?.client.user.name}</DialogTitle>
+            <DialogDescription>
+              {paiementEnDetail?.facture.type === "carte" ? "Carte prépayée" : "Facture"} —{" "}
+              {paiementEnDetail?.facture.reference_facture ?? "—"}
+            </DialogDescription>
+          </DialogHeader>
+          {paiementEnDetail ? (
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Guichet référent</dt>
+                <dd>{paiementEnDetail.guichet_referent.nom}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Montant facture</dt>
+                <dd>{paiementEnDetail.facture.montant_du.toLocaleString("fr-FR")} Ar</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Frais</dt>
+                <dd>{(paiementEnDetail.montant_frais ?? 0).toLocaleString("fr-FR")} Ar</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Total payé</dt>
+                <dd className="font-medium">
+                  {paiementEnDetail.montant.toLocaleString("fr-FR")} Ar
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Méthode</dt>
+                <dd>{paiementEnDetail.methode === "mvola" ? "Mvola" : "Orange Money"}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Statut</dt>
+                <dd>{badgeStatutPaiement(paiementEnDetail.statut_mobile_money)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Ticket JIRAMA saisi</dt>
+                <dd>{paiementEnDetail.paiement_jirama ? "Oui" : "Non"}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Commission créditée</dt>
+                <dd>
+                  {paiementEnDetail.commission
+                    ? `${paiementEnDetail.commission.montant_commission.toLocaleString("fr-FR")} Ar`
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!paiementActif} onOpenChange={(open) => !open && setPaiementActif(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
