@@ -17,6 +17,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ReceiptText,
   Smartphone,
   ShieldCheck,
@@ -25,6 +31,8 @@ import {
   CreditCard,
   Download,
   Trash2,
+  RotateCcw,
+  MoreVertical,
 } from "lucide-react";
 
 function messageErreur(error: unknown, fallback: string): string {
@@ -175,16 +183,37 @@ function FacturesClient() {
                         {estConfirme ? (
                           <span className="text-xs text-muted-foreground">—</span>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            disabled={supprimerMutation.isPending}
-                            onClick={() => handleSupprimer(f.id, f.reference_facture)}
-                          >
-                            <Trash2 className="mr-2 size-4" />
-                            Supprimer
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="size-8">
+                                <MoreVertical className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  to={
+                                    f.type === "carte"
+                                      ? "/espace/facture-carte"
+                                      : "/espace/payer-facture"
+                                  }
+                                  search={{ reprendre: f.id }}
+                                  className="cursor-pointer"
+                                >
+                                  <RotateCcw className="mr-2 size-4" />
+                                  Reprendre le paiement
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                disabled={supprimerMutation.isPending}
+                                onClick={() => handleSupprimer(f.id, f.reference_facture)}
+                              >
+                                <Trash2 className="mr-2 size-4" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </TableCell>
                     </TableRow>

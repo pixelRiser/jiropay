@@ -70,6 +70,38 @@ class FactureController extends Controller
     }
 
     /**
+     * Modifie une facture déclarée par le client — permet de "reprendre" un
+     * paiement resté bloqué (lien GoalPay expiré/abandonné) sans ressaisir
+     * toutes les infos depuis zéro, tout en gardant la main pour les
+     * corriger. Une facture déjà payée ne peut plus être modifiée (intégrité
+     * de l'historique financier, même garde que destroy()).
+     */
+    public function update(Request $request, Facture $facture): JsonResponse
+    {
+        $client = $request->user()->client;
+        abort_unless($client, 403, "Ce compte n'a pas de profil client.");
+        abort_unless($facture->client_id === $client->id, 403, "Cette facture ne vous appartient pas.");
+
+        $dejaPayee = $facture->paiements()->where('statut_mobile_money', 'confirme')->exists();
+        abort_if($dejaPayee, 422, 'Une facture déjà payée ne peut plus être modifiée.');
+
+        $validated = $request->validate([
+            'reference_facture' => 'sometimes|string|max:100',
+            'nom_titulaire'     => 'sometimes|string|max:255',
+            'montant_du'        => 'sometimes|integer|min:300',
+            'numero_compteur'   => $facture->type === 'carte' ? 'sometimes|string|max:100' : 'nullable|string|max:100',
+        ], [
+            'reference_facture.required' => 'La référence est obligatoire.',
+            'nom_titulaire.required'     => 'Le nom du titulaire est obligatoire.',
+            'montant_du.min'             => 'Le montant minimum est de 300 Ar.',
+        ]);
+
+        $facture->update($validated);
+
+        return response()->json(['success' => true, 'data' => $facture->fresh()]);
+    }
+
+    /**
      * Supprime une facture du client connecté — permet de nettoyer les
      * essais abandonnés (jamais payés) dans "Mes factures". Une facture
      * avec un paiement confirmé ne peut jamais être supprimée (intégrité

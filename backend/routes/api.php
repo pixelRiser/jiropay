@@ -68,6 +68,7 @@ Route::middleware(['auth:sanctum', 'role:agent'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
     Route::get('factures', [FactureController::class, 'mine']);
     Route::post('factures', [FactureController::class, 'store']);
+    Route::patch('factures/{facture}', [FactureController::class, 'update']);
     Route::delete('factures/{facture}', [FactureController::class, 'destroy']);
     Route::post('paiements', [PaiementController::class, 'initier']);
     Route::get('factures/{facture}/recu', [RecuController::class, 'telecharger']);

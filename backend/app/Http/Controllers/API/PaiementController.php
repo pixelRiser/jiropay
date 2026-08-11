@@ -36,10 +36,17 @@ class PaiementController extends Controller
             ->where('client_id', $client->id)
             ->firstOrFail();
 
-        $dejaEnCours = $facture->paiements()
-            ->whereIn('statut_mobile_money', ['en_attente', 'confirme'])
-            ->exists();
-        abort_if($dejaEnCours, 422, 'Un paiement est déjà en cours ou confirmé pour cette facture.');
+        $dejaConfirme = $facture->paiements()->where('statut_mobile_money', 'confirme')->exists();
+        abort_if($dejaConfirme, 422, 'Cette facture a déjà été payée.');
+
+        // Annule les tentatives restées "en_attente" (lien GoalPay expiré ou
+        // abandonné côté client) plutôt que de bloquer indéfiniment toute
+        // nouvelle tentative — le client doit pouvoir "reprendre" un paiement
+        // bloqué (voir /espace/factures, action "Reprendre le paiement").
+        $facture->paiements()->where('statut_mobile_money', 'en_attente')->update([
+            'statut_mobile_money' => 'echoue',
+            'erreur_gateway' => 'Nouvelle tentative de paiement initiée par le client',
+        ]);
 
         // Le client paie le montant de la facture + des frais de service (montant
         // fixe du guichet référent). Frais et commission sont figés ici, à

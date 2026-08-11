@@ -41,6 +41,22 @@ export async function creerFacture(payload: {
   return res.data;
 }
 
+export async function modifierFacture(
+  factureId: number,
+  payload: Partial<{
+    reference_facture: string;
+    nom_titulaire: string;
+    montant_du: number;
+    numero_compteur: string;
+  }>,
+): Promise<Facture> {
+  const res = await apiFetch<{ success: boolean; data: Facture }>(`/api/factures/${factureId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
 export async function initierPaiement(payload: { facture_id: number }): Promise<Paiement> {
   const res = await apiFetch<{ success: boolean; data: Paiement }>("/api/paiements", {
     method: "POST",

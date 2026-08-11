@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { creerFacture, initierPaiement, type Facture } from "@/lib/jiropay/facture-api";
+import {
+  creerFacture,
+  modifierFacture,
+  mesFactures,
+  initierPaiement,
+  type Facture,
+} from "@/lib/jiropay/facture-api";
 import { ApiError } from "@/lib/jiropay/http";
 import { useAuth } from "@/lib/jiropay/auth-store";
 import { PageHeader } from "@/components/PageHeader";
@@ -14,8 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard, ArrowLeft } from "lucide-react";
 
+type SearchParams = { reprendre?: number | undefined };
+
 export const Route = createFileRoute("/_authenticated/espace/facture-carte")({
   head: () => ({ meta: [{ title: "Acheter facture carte — JIRAMA Pay" }] }),
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    reprendre: search["reprendre"] ? Number(search["reprendre"]) : undefined,
+  }),
   component: FactureCarte,
 });
 
@@ -32,14 +43,36 @@ function messageErreur(error: unknown, fallback: string): string {
 }
 
 function FactureCarte() {
+  const { reprendre } = Route.useSearch();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [facture, setFacture] = useState<Facture | null>(null);
+  const [factureIdEnEdition, setFactureIdEnEdition] = useState<number | null>(null);
 
   const [referenceClient, setReferenceClient] = useState("");
   const [nomTitulaire, setNomTitulaire] = useState("");
   const [numeroCompteur, setNumeroCompteur] = useState("");
   const [montant, setMontant] = useState("");
+
+  // "Reprendre le paiement" (depuis /espace/factures) — pré-remplit le
+  // formulaire avec l'achat existant au lieu de tout ressaisir, tout en
+  // laissant l'utilisateur corriger n'importe quel champ avant de continuer.
+  const { data: mesFacturesData } = useQuery({
+    queryKey: ["mes-factures"],
+    queryFn: mesFactures,
+    enabled: !!reprendre,
+  });
+
+  useEffect(() => {
+    if (!reprendre || !mesFacturesData) return;
+    const existante = mesFacturesData.find((f) => f.id === reprendre);
+    if (!existante) return;
+    setFactureIdEnEdition(existante.id);
+    setReferenceClient(existante.reference_facture ?? "");
+    setNomTitulaire(existante.nom_titulaire ?? "");
+    setNumeroCompteur(existante.numero_compteur ?? "");
+    setMontant(String(existante.montant_du));
+  }, [reprendre, mesFacturesData]);
 
   const creerMutation = useMutation({
     mutationFn: creerFacture,
@@ -48,6 +81,16 @@ function FactureCarte() {
       queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
     },
     onError: (error) => toast.error(messageErreur(error, "Impossible d'enregistrer cet achat.")),
+  });
+
+  const modifierMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof modifierFacture>[1]) =>
+      modifierFacture(factureIdEnEdition!, payload),
+    onSuccess: (data) => {
+      setFacture(data);
+      queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
+    },
+    onError: (error) => toast.error(messageErreur(error, "Impossible de mettre à jour cet achat.")),
   });
 
   const paiementMutation = useMutation({
@@ -115,11 +158,18 @@ function FactureCarte() {
     );
   }
 
+  const enEdition = factureIdEnEdition !== null;
+  const enCours = creerMutation.isPending || modifierMutation.isPending;
+
   return (
     <>
       <PageHeader
         titre="Acheter facture carte"
-        sousTitre="Rechargez un compteur prépayé JIRAMA, comme un crédit téléphonique."
+        sousTitre={
+          enEdition
+            ? "Vérifiez ou corrigez les informations avant de reprendre le paiement."
+            : "Rechargez un compteur prépayé JIRAMA, comme un crédit téléphonique."
+        }
       />
       <Card className="mx-auto max-w-md">
         <CardContent className="pt-6">
@@ -127,6 +177,15 @@ function FactureCarte() {
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
+              if (enEdition) {
+                modifierMutation.mutate({
+                  reference_facture: referenceClient,
+                  nom_titulaire: nomTitulaire,
+                  numero_compteur: numeroCompteur,
+                  montant_du: Number(montant),
+                });
+                return;
+              }
               creerMutation.mutate({
                 type: "carte",
                 reference_facture: referenceClient,
@@ -188,13 +247,13 @@ function FactureCarte() {
                 ))}
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={creerMutation.isPending}>
-              {creerMutation.isPending ? (
+            <Button type="submit" className="w-full" disabled={enCours}>
+              {enCours ? (
                 "Enregistrement…"
               ) : (
                 <>
                   <CreditCard className="mr-2 size-4" />
-                  Continuer
+                  {enEdition ? "Mettre à jour et continuer" : "Continuer"}
                 </>
               )}
             </Button>

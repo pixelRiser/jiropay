@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { creerFacture, initierPaiement, type Facture } from "@/lib/jiropay/facture-api";
+import {
+  creerFacture,
+  modifierFacture,
+  mesFactures,
+  initierPaiement,
+  type Facture,
+} from "@/lib/jiropay/facture-api";
 import { ApiError } from "@/lib/jiropay/http";
 import { useAuth } from "@/lib/jiropay/auth-store";
 import { PageHeader } from "@/components/PageHeader";
@@ -14,8 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, ArrowLeft } from "lucide-react";
 
+type SearchParams = { reprendre?: number | undefined };
+
 export const Route = createFileRoute("/_authenticated/espace/payer-facture")({
   head: () => ({ meta: [{ title: "Payer une facture — JIRAMA Pay" }] }),
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    reprendre: search["reprendre"] ? Number(search["reprendre"]) : undefined,
+  }),
   component: PayerFacture,
 });
 
@@ -30,13 +41,34 @@ function messageErreur(error: unknown, fallback: string): string {
 }
 
 function PayerFacture() {
+  const { reprendre } = Route.useSearch();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [facture, setFacture] = useState<Facture | null>(null);
+  const [factureIdEnEdition, setFactureIdEnEdition] = useState<number | null>(null);
 
   const [referenceFacture, setReferenceFacture] = useState("");
   const [montant, setMontant] = useState("");
   const [nomTitulaire, setNomTitulaire] = useState("");
+
+  // "Reprendre le paiement" (depuis /espace/factures) — pré-remplit le
+  // formulaire avec la facture existante au lieu de tout ressaisir, tout en
+  // laissant l'utilisateur corriger n'importe quel champ avant de continuer.
+  const { data: mesFacturesData } = useQuery({
+    queryKey: ["mes-factures"],
+    queryFn: mesFactures,
+    enabled: !!reprendre,
+  });
+
+  useEffect(() => {
+    if (!reprendre || !mesFacturesData) return;
+    const existante = mesFacturesData.find((f) => f.id === reprendre);
+    if (!existante) return;
+    setFactureIdEnEdition(existante.id);
+    setReferenceFacture(existante.reference_facture ?? "");
+    setNomTitulaire(existante.nom_titulaire ?? "");
+    setMontant(String(existante.montant_du));
+  }, [reprendre, mesFacturesData]);
 
   const creerMutation = useMutation({
     mutationFn: creerFacture,
@@ -46,6 +78,17 @@ function PayerFacture() {
     },
     onError: (error) =>
       toast.error(messageErreur(error, "Impossible d'enregistrer cette facture.")),
+  });
+
+  const modifierMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof modifierFacture>[1]) =>
+      modifierFacture(factureIdEnEdition!, payload),
+    onSuccess: (data) => {
+      setFacture(data);
+      queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
+    },
+    onError: (error) =>
+      toast.error(messageErreur(error, "Impossible de mettre à jour cette facture.")),
   });
 
   const paiementMutation = useMutation({
@@ -111,11 +154,18 @@ function PayerFacture() {
     );
   }
 
+  const enEdition = factureIdEnEdition !== null;
+  const enCours = creerMutation.isPending || modifierMutation.isPending;
+
   return (
     <>
       <PageHeader
         titre="Payer une facture"
-        sousTitre="Renseignez la référence figurant sur votre facture JIRAMA."
+        sousTitre={
+          enEdition
+            ? "Vérifiez ou corrigez les informations avant de reprendre le paiement."
+            : "Renseignez la référence figurant sur votre facture JIRAMA."
+        }
       />
       <Card className="mx-auto max-w-md">
         <CardContent className="pt-6">
@@ -123,12 +173,20 @@ function PayerFacture() {
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              creerMutation.mutate({
-                type: "facture",
-                reference_facture: referenceFacture,
-                montant_du: Number(montant),
-                nom_titulaire: nomTitulaire,
-              });
+              if (enEdition) {
+                modifierMutation.mutate({
+                  reference_facture: referenceFacture,
+                  montant_du: Number(montant),
+                  nom_titulaire: nomTitulaire,
+                });
+              } else {
+                creerMutation.mutate({
+                  type: "facture",
+                  reference_facture: referenceFacture,
+                  montant_du: Number(montant),
+                  nom_titulaire: nomTitulaire,
+                });
+              }
             }}
           >
             <div className="space-y-1">
@@ -161,13 +219,13 @@ function PayerFacture() {
                 onChange={(e) => setMontant(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={creerMutation.isPending}>
-              {creerMutation.isPending ? (
+            <Button type="submit" className="w-full" disabled={enCours}>
+              {enCours ? (
                 "Enregistrement…"
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 size-4" />
-                  Continuer
+                  {enEdition ? "Mettre à jour et continuer" : "Continuer"}
                 </>
               )}
             </Button>
