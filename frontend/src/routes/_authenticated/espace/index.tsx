@@ -13,7 +13,6 @@ import {
   Smartphone,
   Store,
   ShieldCheck,
-  CreditCard,
   ArrowRight,
 } from "lucide-react";
 
@@ -44,36 +43,43 @@ function EspaceDashboard() {
         sousTitre="Voici un aperçu de votre compte JIRAMA Pay."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <p className="mt-2 text-sm text-muted-foreground">
+        Reconnaissez votre document JIRAMA ci-dessous et cliquez sur la card correspondante.
+      </p>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <Link to="/espace/payer-facture">
-          <Card className="h-full cursor-pointer border-primary/20 bg-primary/5 transition-colors hover:bg-primary/10">
-            <CardContent className="flex items-center gap-4 pt-6">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <ReceiptText className="size-6" />
-              </span>
+          <Card className="h-full cursor-pointer overflow-hidden border-primary/20 bg-primary/5 transition-colors hover:bg-primary/10">
+            <CardContent className="flex items-center gap-4 p-4">
+              <img
+                src="/guides/payer-facture.jpeg"
+                alt="Exemple de facture JIRAMA à payer"
+                className="h-28 w-20 shrink-0 rounded-md border object-cover"
+              />
               <div className="flex-1">
                 <p className="font-semibold text-foreground">Payer une facture</p>
                 <p className="text-sm text-muted-foreground">
-                  Référence facture, montant et titulaire
+                  Vous avez une facture JIRAMA papier (électricité/eau) en main
                 </p>
               </div>
-              <ArrowRight className="size-5 text-muted-foreground" />
+              <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
             </CardContent>
           </Card>
         </Link>
         <Link to="/espace/facture-carte">
-          <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
-            <CardContent className="flex items-center gap-4 pt-6">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
-                <CreditCard className="size-6" />
-              </span>
+          <Card className="h-full cursor-pointer overflow-hidden transition-colors hover:bg-accent/50">
+            <CardContent className="flex items-center gap-4 p-4">
+              <img
+                src="/guides/facture-carte.jpeg"
+                alt="Exemple de ticket de recharge prépayée JIRAMA"
+                className="h-28 w-20 shrink-0 rounded-md border object-cover"
+              />
               <div className="flex-1">
                 <p className="font-semibold text-foreground">Acheter facture carte</p>
                 <p className="text-sm text-muted-foreground">
-                  Titulaire, référence client et n° de compteur
+                  Vous avez un ticket de recharge prépayée (compteur) en main
                 </p>
               </div>
-              <ArrowRight className="size-5 text-muted-foreground" />
+              <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
             </CardContent>
           </Card>
         </Link>

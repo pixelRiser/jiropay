@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Admin\AgentController;
 use App\Http\Controllers\API\Admin\GuichetController;
+use App\Http\Controllers\API\Admin\PaiementJiramaController;
 use App\Http\Controllers\API\ClientController;
 use App\Http\Controllers\API\FactureController;
 use App\Http\Controllers\API\GuichetController as MyGuichetController;
@@ -26,6 +27,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::get('agents/pending', [AgentController::class, 'pending']);
     Route::post('agents/{user}/approve', [AgentController::class, 'approve']);
     Route::post('agents/{user}/reject', [AgentController::class, 'reject']);
+
+    Route::get('paiements-jirama/en-attente', [PaiementJiramaController::class, 'enAttente']);
+    Route::get('paiements-jirama/traites', [PaiementJiramaController::class, 'traites']);
+    Route::post('paiements/{paiement}/ticket-jirama', [PaiementJiramaController::class, 'store']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,agent'])->group(function () {

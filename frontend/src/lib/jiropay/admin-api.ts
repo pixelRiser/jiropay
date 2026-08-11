@@ -111,3 +111,73 @@ export async function creerClient(payload: {
     body: JSON.stringify(payload),
   });
 }
+
+export type PaiementEnAttenteTicket = {
+  id: number;
+  montant: number;
+  date_paiement: string | null;
+  facture: {
+    id: number;
+    type: "facture" | "carte";
+    reference_facture: string | null;
+    nom_titulaire: string | null;
+    numero_compteur: string | null;
+    montant_du: number;
+  };
+  client: {
+    user: { id: number; name: string; email: string };
+  };
+};
+
+export type TicketJiramaPayload = {
+  numero_ticket?: string | undefined;
+  date_operation: string;
+  nom_client: string;
+  // type 'facture'
+  ref_client?: string | undefined;
+  ref_facture?: string | undefined;
+  mois_facture?: string | undefined;
+  montant_facture?: number | undefined;
+  // type 'carte'
+  installation?: string | undefined;
+  commune_code?: string | undefined;
+  compteur?: string | undefined;
+  type_prepaye?: string | undefined;
+  quantite_achetee?: string | undefined;
+  mont_cons?: number | undefined;
+  prime_fixe?: number | undefined;
+  redevance?: number | undefined;
+  total_jirama?: number | undefined;
+  taxe_comm?: number | undefined;
+  sur_taxe_comm?: number | undefined;
+  fne?: number | undefined;
+  tva?: number | undefined;
+  total_taxes?: number | undefined;
+  jeton?: string | undefined;
+  // commun paiement
+  a_payer: number;
+  methode_paiement_libelle: string;
+  ref_transaction: string;
+  numero_payeur: string;
+  operateur: string;
+  id_interne?: string | undefined;
+  frais_jirakaiky?: number | undefined;
+  frais_operateur?: number | undefined;
+};
+
+export async function paiementsEnAttenteTicket(): Promise<PaiementEnAttenteTicket[]> {
+  const res = await apiFetch<{ success: boolean; data: PaiementEnAttenteTicket[] }>(
+    "/api/admin/paiements-jirama/en-attente",
+  );
+  return res.data;
+}
+
+export async function creerTicketJirama(
+  paiementId: number,
+  payload: TicketJiramaPayload,
+): Promise<void> {
+  await apiFetch(`/api/admin/paiements/${paiementId}/ticket-jirama`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

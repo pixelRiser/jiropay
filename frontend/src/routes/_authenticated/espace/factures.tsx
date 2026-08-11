@@ -137,6 +137,7 @@ function FacturesClient() {
                     ? LIBELLE_STATUT_PAIEMENT[dernierPaiement.statut_mobile_money]
                     : null;
                   const estConfirme = dernierPaiement?.statut_mobile_money === "confirme";
+                  const recuDisponible = f.statut === "paye_jirama";
                   return (
                     <TableRow key={f.id}>
                       <TableCell>
@@ -157,13 +158,15 @@ function FacturesClient() {
                       </TableCell>
                       <TableCell>{new Date(f.created_at).toLocaleDateString("fr-FR")}</TableCell>
                       <TableCell className="text-right">
-                        {estConfirme ? (
+                        {recuDisponible ? (
                           <Button asChild size="sm" variant="outline">
                             <a href={`/api/factures/${f.id}/recu`} target="_blank" rel="noreferrer">
                               <Download className="mr-2 size-4" />
                               Télécharger
                             </a>
                           </Button>
+                        ) : estConfirme ? (
+                          <span className="text-xs text-muted-foreground">En cours…</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
