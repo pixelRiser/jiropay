@@ -5,11 +5,12 @@ import { toast } from "sonner";
 import { creerFacture, initierPaiement, type Facture } from "@/lib/jiropay/facture-api";
 import { ApiError } from "@/lib/jiropay/http";
 import { PageHeader } from "@/components/PageHeader";
+import { MethodesPaiementGoalPay } from "@/components/MethodesPaiementGoalPay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, ArrowLeft, Wallet } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/espace/payer-facture")({
   head: () => ({ meta: [{ title: "Payer une facture — JIRAMA Pay" }] }),
@@ -72,15 +73,11 @@ function PayerFacture() {
               {facture.montant_du.toLocaleString("fr-FR")} Ar
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              className="w-full"
+          <CardContent className="space-y-4">
+            <MethodesPaiementGoalPay
               disabled={paiementMutation.isPending}
-              onClick={() => paiementMutation.mutate({ facture_id: facture.id })}
-            >
-              <Wallet className="mr-2 size-4" />
-              {paiementMutation.isPending ? "Redirection en cours…" : "Payer avec GoalPay"}
-            </Button>
+              onSelect={() => paiementMutation.mutate({ facture_id: facture.id })}
+            />
             <Button
               variant="ghost"
               className="w-full"
