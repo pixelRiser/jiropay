@@ -131,7 +131,23 @@ function GuichetsAdmin() {
                 </div>
                 <div className="space-y-1">
                   <Label>Zone</Label>
-                  <Select value={zone} onValueChange={(v) => setZone(v as "ville" | "hors_ville")}>
+                  <Select
+                    value={zone}
+                    onValueChange={(v) => {
+                      const zoneChoisie = v as "ville" | "hors_ville";
+                      setZone(zoneChoisie);
+                      // Pré-remplit les valeurs par défaut du cahier des charges
+                      // (200/200 en ville, 500/400 hors ville) — l'admin peut
+                      // toujours les ajuster manuellement ensuite.
+                      if (zoneChoisie === "ville") {
+                        setFraisDefaut("200");
+                        setCommissionDefaut("200");
+                      } else {
+                        setFraisDefaut("500");
+                        setCommissionDefaut("400");
+                      }
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -150,6 +166,9 @@ function GuichetsAdmin() {
                     value={fraisDefaut}
                     onChange={(e) => setFraisDefaut(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Pré-rempli selon la zone, ajustable au besoin.
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="g-comm">Commission par défaut (Ar)</Label>
@@ -160,6 +179,9 @@ function GuichetsAdmin() {
                     value={commissionDefaut}
                     onChange={(e) => setCommissionDefaut(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Part reversée au guichet sur les frais — ce qui reste va à la plateforme.
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={creerMutation.isPending}>
                   Créer le guichet
