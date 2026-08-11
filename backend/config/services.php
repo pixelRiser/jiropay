@@ -36,14 +36,20 @@ return [
     ],
 
     /*
-    | GoalPay — passerelle de paiement unique de JiroPay (Orange Money, Telma/Mvola).
-    | Le client choisit son opérateur sur la page GoalPay elle-même — l'API de
-    | création de commande ne prend pas de paramètre "méthode".
+    | Passerelle de paiement de JiroPay — actuellement GoalPay (Orange Money,
+    | Telma/Mvola). Clé volontairement neutre (payment_gateway, pas goalpay) :
+    | seul PaymentGatewayService connaît le nom du fournisseur réel.
+    | Le client choisit son opérateur sur la page du fournisseur elle-même —
+    | l'API de création de commande ne prend pas de paramètre "méthode".
     | api_token : TGPT_... (sandbox) ou TGP_... (production) — ne jamais inverser.
     */
-    'goalpay' => [
+    'payment_gateway' => [
         'api_url' => env('GOALPAY_API_URL', 'https://api.goalpay.pro'),
         'api_token' => env('GOALPAY_API_TOKEN', ''),
+        // Secret dédié pour la signature webhook (exemple officiel GoalPay) —
+        // si absent, on retombe sur api_token (comportement observé ailleurs,
+        // à confirmer une fois le vrai compte marchand configuré).
+        'webhook_secret' => env('GOALPAY_WEBHOOK_SECRET', ''),
         'sandbox' => env('GOALPAY_SANDBOX', true),
         'success_url' => env('GOALPAY_SUCCESS_URL', 'https://jiropay.pixel-rise.com/paiement/succes'),
         'cancel_url' => env('GOALPAY_CANCEL_URL', 'https://jiropay.pixel-rise.com/paiement/annule'),

@@ -4,18 +4,18 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Paiement;
-use App\Services\GoalpayService;
+use App\Services\PaymentGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class GoalpayWebhookController extends Controller
+class PaymentWebhookController extends Controller
 {
     /**
-     * Réception des événements GoalPay (payment.success/failed/canceled/
-     * expired). Pas de middleware auth — vérifié par la signature
-     * x-gpay-signature (HMAC-SHA256 du corps brut, clé = token API).
-     * Toujours répondre 200 rapidement pour éviter les retries GoalPay,
+     * Réception des événements de la passerelle de paiement (actuellement
+     * GoalPay : payment.success/failed/canceled/expired). Pas de middleware
+     * auth — vérifié par la signature x-gpay-signature (HMAC-SHA256 du corps
+     * brut). Toujours répondre 200 rapidement pour éviter les retries,
      * même si l'événement est ignoré (paiement introuvable, déjà traité...).
      */
     public function handle(Request $request): JsonResponse
@@ -23,8 +23,8 @@ class GoalpayWebhookController extends Controller
         $rawBody = $request->getContent();
         $signature = $request->header('x-gpay-signature');
 
-        $goalpay = new GoalpayService();
-        if (! $goalpay->verifierSignatureWebhook($rawBody, $signature)) {
+        $gateway = new PaymentGatewayService();
+        if (! $gateway->verifierSignatureWebhook($rawBody, $signature)) {
             Log::warning('GoalPay webhook: signature invalide', ['signature' => $signature]);
 
             return response()->json(['message' => 'Signature invalide'], 401);

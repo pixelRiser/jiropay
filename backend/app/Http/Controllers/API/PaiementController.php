@@ -5,19 +5,20 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Facture;
 use App\Models\Paiement;
-use App\Services\GoalpayService;
+use App\Services\PaymentGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaiementController extends Controller
 {
     /**
-     * Initie un paiement GoalPay (Orange Money, Telma/Mvola) pour une
-     * facture du client connecté. Crée le paiement "en_attente", crée la
-     * commande GoalPay, puis renvoie le checkout_url vers lequel le
-     * frontend redirige le client — c'est GoalPay qui propose le choix de
-     * l'opérateur, pas JiroPay. La confirmation arrive par webhook
-     * (GoalpayWebhookController), jamais par le retour navigateur.
+     * Initie un paiement (Orange Money, Telma/Mvola via la passerelle
+     * configurée) pour une facture du client connecté. Crée le paiement
+     * "en_attente", crée la commande côté passerelle, puis renvoie le
+     * checkout_url vers lequel le frontend redirige le client — c'est la
+     * passerelle qui propose le choix de l'opérateur, pas JiroPay. La
+     * confirmation arrive par webhook (PaymentWebhookController), jamais
+     * par le retour navigateur.
      */
     public function initier(Request $request): JsonResponse
     {
@@ -49,13 +50,13 @@ class PaiementController extends Controller
             'statut_mobile_money' => 'en_attente',
         ]);
 
-        $goalpay = new GoalpayService();
-        $reference = $goalpay->genererReferencePaiement($paiement->id);
+        $gateway = new PaymentGatewayService();
+        $reference = $gateway->genererReferencePaiement($paiement->id);
         $description = $facture->type === 'carte'
             ? "Achat crédit JIRAMA — compteur {$facture->numero_compteur}"
             : "Paiement facture JIRAMA — {$facture->reference_facture}";
 
-        $resultat = $goalpay->creerCommande($facture->montant_du, $reference, $description);
+        $resultat = $gateway->creerCommande($facture->montant_du, $reference, $description);
 
         if (! $resultat['success']) {
             $paiement->update([

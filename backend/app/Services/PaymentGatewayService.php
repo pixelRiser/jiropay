@@ -7,19 +7,27 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Service GoalPay — passerelle de paiement unique de JiroPay (Orange Money,
- * Telma/Mvola). Le client choisit son opérateur sur la page GoalPay
+ * Passerelle de paiement de JiroPay — actuellement branchée sur GoalPay
+ * (Orange Money, Telma/Mvola). Nom volontairement neutre : si le fournisseur
+ * change un jour, seule cette classe (et sa config `services.payment_gateway`)
+ * doit être remplacée — le reste de l'application ne connaît que ce contrat
+ * (creerCommande / verifierSignatureWebhook), jamais le nom "GoalPay".
+ *
+ * Le client choisit son opérateur sur la page de paiement du fournisseur
  * elle-même — l'API de création de commande ne prend pas de paramètre
  * "méthode".
  *
  * Sécurité webhook : le header x-gpay-signature est un HMAC-SHA256 du corps
- * brut de la requête, signé avec le token API lui-même (TGP_...) — pas de
- * secret webhook séparé.
+ * brut de la requête, signé avec GOALPAY_WEBHOOK_SECRET (exemple officiel
+ * GoalPay). Si ce secret n'est pas configuré, on retombe sur le token API —
+ * comportement observé sur une intégration GoalPay antérieure, à confirmer
+ * une fois le vrai compte marchand jiropay créé.
  */
-class GoalpayService
+class PaymentGatewayService
 {
     private string $apiUrl;
     private string $apiToken;
+    private string $webhookSecret;
     private bool $sandbox;
 
     private string $successUrl;
@@ -28,12 +36,13 @@ class GoalpayService
 
     public function __construct()
     {
-        $this->apiUrl = rtrim(config('services.goalpay.api_url', 'https://api.goalpay.pro'), '/');
-        $this->apiToken = config('services.goalpay.api_token', '');
-        $this->sandbox = (bool) config('services.goalpay.sandbox', true);
-        $this->successUrl = config('services.goalpay.success_url');
-        $this->cancelUrl = config('services.goalpay.cancel_url');
-        $this->failedUrl = config('services.goalpay.failed_url');
+        $this->apiUrl = rtrim(config('services.payment_gateway.api_url', 'https://api.goalpay.pro'), '/');
+        $this->apiToken = config('services.payment_gateway.api_token', '');
+        $this->webhookSecret = config('services.payment_gateway.webhook_secret', '') ?: $this->apiToken;
+        $this->sandbox = (bool) config('services.payment_gateway.sandbox', true);
+        $this->successUrl = config('services.payment_gateway.success_url');
+        $this->cancelUrl = config('services.payment_gateway.cancel_url');
+        $this->failedUrl = config('services.payment_gateway.failed_url');
     }
 
     /**
@@ -130,11 +139,11 @@ class GoalpayService
      */
     public function verifierSignatureWebhook(string $rawBody, ?string $signature): bool
     {
-        if (empty($this->apiToken) || empty($signature)) {
+        if (empty($this->webhookSecret) || empty($signature)) {
             return false;
         }
 
-        $expected = hash_hmac('sha256', $rawBody, $this->apiToken);
+        $expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
 
         return hash_equals($expected, $signature);
     }
