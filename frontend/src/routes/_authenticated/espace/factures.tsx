@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { mesFactures } from "@/lib/jiropay/facture-api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { mesFactures, supprimerFacture } from "@/lib/jiropay/facture-api";
+import { ApiError } from "@/lib/jiropay/http";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +16,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ReceiptText, Smartphone, ShieldCheck, Bell, Plus, CreditCard } from "lucide-react";
+import {
+  ReceiptText,
+  Smartphone,
+  ShieldCheck,
+  Bell,
+  Plus,
+  CreditCard,
+  Download,
+  Trash2,
+} from "lucide-react";
+
+function messageErreur(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const payload = error.payload as { message?: string } | undefined;
+    return payload?.message ?? error.message ?? fallback;
+  }
+  return fallback;
+}
 
 export const Route = createFileRoute("/_authenticated/espace/factures")({
   component: FacturesClient,
@@ -29,10 +49,32 @@ const LIBELLE_STATUT_PAIEMENT: Record<
 };
 
 function FacturesClient() {
+  const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const { data: factures = [], isLoading } = useQuery({
     queryKey: ["mes-factures"],
     queryFn: mesFactures,
   });
+
+  const supprimerMutation = useMutation({
+    mutationFn: supprimerFacture,
+    onSuccess: () => {
+      toast.success("Facture supprimée.");
+      queryClient.invalidateQueries({ queryKey: ["mes-factures"] });
+    },
+    onError: (error) => toast.error(messageErreur(error, "Impossible de supprimer cette facture.")),
+  });
+
+  async function handleSupprimer(factureId: number, reference: string | null) {
+    const ok = await confirm({
+      titre: "Supprimer cette facture ?",
+      description: `La facture ${reference ?? ""} sera définitivement supprimée. Cette action est irréversible.`,
+      confirmLabel: "Supprimer",
+      destructif: true,
+    });
+    if (!ok) return;
+    supprimerMutation.mutate(factureId);
+  }
 
   return (
     <>
@@ -84,6 +126,8 @@ function FacturesClient() {
                   <TableHead>Paiement</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Reçu</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -92,6 +136,7 @@ function FacturesClient() {
                   const statut = dernierPaiement
                     ? LIBELLE_STATUT_PAIEMENT[dernierPaiement.statut_mobile_money]
                     : null;
+                  const estConfirme = dernierPaiement?.statut_mobile_money === "confirme";
                   return (
                     <TableRow key={f.id}>
                       <TableCell>
@@ -111,6 +156,34 @@ function FacturesClient() {
                         )}
                       </TableCell>
                       <TableCell>{new Date(f.created_at).toLocaleDateString("fr-FR")}</TableCell>
+                      <TableCell className="text-right">
+                        {estConfirme ? (
+                          <Button asChild size="sm" variant="outline">
+                            <a href={`/api/factures/${f.id}/recu`} target="_blank" rel="noreferrer">
+                              <Download className="mr-2 size-4" />
+                              Télécharger
+                            </a>
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {estConfirme ? (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            disabled={supprimerMutation.isPending}
+                            onClick={() => handleSupprimer(f.id, f.reference_facture)}
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            Supprimer
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}

@@ -150,6 +150,15 @@ class PaymentGatewayService
         return hash_equals($expected, $signature);
     }
 
+    /**
+     * Diagnostic uniquement : signature attendue pour comparaison en logs
+     * quand une signature reçue est rejetée.
+     */
+    public function debugSignatureAttendue(string $rawBody): string
+    {
+        return hash_hmac('sha256', $rawBody, $this->webhookSecret);
+    }
+
     public function genererReferencePaiement(int $paiementId): string
     {
         return 'PAI-'.now()->format('Ymd').'-'.str_pad((string) $paiementId, 6, '0', STR_PAD_LEFT).'-'.strtoupper(Str::random(4));

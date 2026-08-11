@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Facture;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -66,5 +67,26 @@ class FactureController extends Controller
         ]);
 
         return response()->json(['success' => true, 'data' => $facture], 201);
+    }
+
+    /**
+     * Supprime une facture du client connecté — permet de nettoyer les
+     * essais abandonnés (jamais payés) dans "Mes factures". Une facture
+     * avec un paiement confirmé ne peut jamais être supprimée (intégrité
+     * de l'historique financier).
+     */
+    public function destroy(Request $request, Facture $facture): JsonResponse
+    {
+        $client = $request->user()->client;
+        abort_unless($client, 403, "Ce compte n'a pas de profil client.");
+        abort_unless($facture->client_id === $client->id, 403, "Cette facture ne vous appartient pas.");
+
+        $dejaPayee = $facture->paiements()->where('statut_mobile_money', 'confirme')->exists();
+        abort_if($dejaPayee, 422, 'Une facture déjà payée ne peut pas être supprimée.');
+
+        $facture->paiements()->delete();
+        $facture->delete();
+
+        return response()->json(['success' => true]);
     }
 }

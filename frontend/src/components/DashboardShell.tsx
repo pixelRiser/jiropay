@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { UserMenu } from "@/components/UserMenu";
-import { Zap, type LucideIcon } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type NavItem = {
@@ -27,14 +28,9 @@ export function DashboardShell({ role, navItems, children }: Props) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-64 shrink-0 flex-col border-r bg-card">
-        <div className="flex items-center gap-2 border-b px-4 py-4 font-semibold">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </span>
-          <div className="leading-tight">
-            <p>JIRAMA Pay</p>
-            <p className="text-xs font-normal text-muted-foreground">{LIBELLE_ROLE[role]}</p>
-          </div>
+        <div className="flex flex-col gap-1 border-b px-4 py-4">
+          <BrandMark className="h-6" />
+          <p className="text-xs font-normal text-muted-foreground">{LIBELLE_ROLE[role]}</p>
         </div>
 
         <nav className="flex-1 space-y-1 p-3">

@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Zap, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -153,11 +154,8 @@ function Auth() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
         <div className="w-full max-w-md">
-          <div className="mb-6 flex items-center justify-center gap-2 font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Zap className="size-4" />
-            </span>
-            JIRAMA Pay
+          <div className="mb-6 flex items-center justify-center">
+            <BrandMark />
           </div>
           <Card>
             <CardHeader className="items-center text-center">
@@ -197,11 +195,8 @@ function Auth() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex items-center justify-center gap-2 font-semibold">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </span>
-          JIRAMA Pay
+        <div className="mb-6 flex items-center justify-center">
+          <BrandMark />
         </div>
         <Card>
           <CardHeader>

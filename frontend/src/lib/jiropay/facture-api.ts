@@ -48,3 +48,9 @@ export async function initierPaiement(payload: { facture_id: number }): Promise<
   });
   return res.data;
 }
+
+export async function supprimerFacture(factureId: number): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/api/factures/${factureId}`, {
+    method: "DELETE",
+  });
+}

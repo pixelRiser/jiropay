@@ -8,6 +8,7 @@ use App\Http\Controllers\API\GuichetController as MyGuichetController;
 use App\Http\Controllers\API\PaiementController;
 use App\Http\Controllers\API\PaymentWebhookController;
 use App\Http\Controllers\API\PublicGuichetController;
+use App\Http\Controllers\API\RecuController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')->group(base_path('routes/auth.php'));
@@ -39,5 +40,7 @@ Route::middleware(['auth:sanctum', 'role:agent'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
     Route::get('factures', [FactureController::class, 'mine']);
     Route::post('factures', [FactureController::class, 'store']);
+    Route::delete('factures/{facture}', [FactureController::class, 'destroy']);
     Route::post('paiements', [PaiementController::class, 'initier']);
+    Route::get('factures/{facture}/recu', [RecuController::class, 'telecharger']);
 });

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Smartphone, Store, ShieldCheck, ReceiptText } from "lucide-react";
+import { Smartphone, Store, ShieldCheck, ReceiptText } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,12 +31,7 @@ function Accueil() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <span className="flex items-center gap-2 font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Zap className="size-4" />
-            </span>
-            JIRAMA Pay
-          </span>
+          <BrandMark />
           <Button asChild size="sm">
             <Link to="/auth">Se connecter</Link>
           </Button>

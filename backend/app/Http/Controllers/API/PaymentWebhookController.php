@@ -25,7 +25,15 @@ class PaymentWebhookController extends Controller
 
         $gateway = new PaymentGatewayService();
         if (! $gateway->verifierSignatureWebhook($rawBody, $signature)) {
-            Log::warning('GoalPay webhook: signature invalide', ['signature' => $signature]);
+            // Log::error (pas warning) : LOG_LEVEL=error en prod, un warning
+            // ne serait jamais écrit — indispensable pour diagnostiquer un
+            // rejet de signature webhook, qui bloque tout paiement réel.
+            Log::error('GoalPay webhook: signature invalide', [
+                'signature_recue' => $signature,
+                'signature_attendue' => $gateway->debugSignatureAttendue($rawBody),
+                'body' => $rawBody,
+                'headers' => $request->headers->all(),
+            ]);
 
             return response()->json(['message' => 'Signature invalide'], 401);
         }
