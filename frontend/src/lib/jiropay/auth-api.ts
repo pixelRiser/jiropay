@@ -12,7 +12,12 @@ export type AuthUser = {
   client: {
     adresse: string | null;
     numero_abonne_jirama: string;
-    guichet_referent: { id: number; nom: string; lieu: string } | null;
+    guichet_referent: {
+      id: number;
+      nom: string;
+      lieu: string;
+      montant_frais_defaut: number;
+    } | null;
   } | null;
   guichet: {
     id: number;

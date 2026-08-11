@@ -41,12 +41,23 @@ class PaiementController extends Controller
             ->exists();
         abort_if($dejaEnCours, 422, 'Un paiement est déjà en cours ou confirmé pour cette facture.');
 
+        // Le client paie le montant de la facture + des frais de service (montant
+        // fixe du guichet référent). Frais et commission sont figés ici, à
+        // l'initiation — jamais recalculés après coup si les tarifs du guichet
+        // changent ensuite (voir migration 2026_08_11_110000).
+        $guichet = $client->guichetReferent;
+        $montantFrais = $guichet->montant_frais_defaut;
+        $montantCommission = min($guichet->montant_commission_defaut, $montantFrais);
+        $montantTotal = $facture->montant_du + $montantFrais;
+
         $paiement = Paiement::create([
             'facture_id' => $facture->id,
             'client_id' => $client->id,
             'guichet_referent_id' => $client->guichet_referent_id,
             'initiateur' => 'client',
-            'montant' => $facture->montant_du,
+            'montant' => $montantTotal,
+            'montant_frais' => $montantFrais,
+            'montant_commission' => $montantCommission,
             'statut_mobile_money' => 'en_attente',
         ]);
 
@@ -56,7 +67,7 @@ class PaiementController extends Controller
             ? "Achat crédit JIRAMA — compteur {$facture->numero_compteur}"
             : "Paiement facture JIRAMA — {$facture->reference_facture}";
 
-        $resultat = $gateway->creerCommande($facture->montant_du, $reference, $description);
+        $resultat = $gateway->creerCommande($montantTotal, $reference, $description);
 
         if (! $resultat['success']) {
             $paiement->update([

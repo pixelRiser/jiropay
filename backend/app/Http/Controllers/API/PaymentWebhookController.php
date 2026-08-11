@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Commission;
 use App\Models\Paiement;
 use App\Services\PaymentGatewayService;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +69,24 @@ class PaymentWebhookController extends Controller
                     'date_paiement' => now(),
                 ]);
                 $paiement->facture()->update(['statut' => 'paye_plateforme']);
-                Log::info('GoalPay webhook: paiement confirmé', ['paiement_id' => $paiement->id]);
+
+                // Commission guichet — montants figés à l'initiation du paiement
+                // (paiement.montant_frais/montant_commission), jamais recalculés.
+                Commission::create([
+                    'paiement_id' => $paiement->id,
+                    'guichet_id' => $paiement->guichet_referent_id,
+                    'montant_facture' => $paiement->facture->montant_du,
+                    'montant_frais' => $paiement->montant_frais,
+                    'part_plateforme' => $paiement->montant_frais - $paiement->montant_commission,
+                    'montant_commission' => $paiement->montant_commission,
+                    'statut' => 'creditee',
+                ]);
+                $paiement->guichetReferent()->increment('solde_commission', $paiement->montant_commission);
+
+                Log::info('GoalPay webhook: paiement confirmé + commission créditée', [
+                    'paiement_id' => $paiement->id,
+                    'montant_commission' => $paiement->montant_commission,
+                ]);
                 break;
 
             case 'payment.failed':

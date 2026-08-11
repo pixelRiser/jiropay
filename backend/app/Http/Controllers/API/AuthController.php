@@ -331,9 +331,10 @@ class AuthController extends Controller
                     'adresse'              => $client->adresse,
                     'numero_abonne_jirama' => $client->numero_abonne_jirama,
                     'guichet_referent'     => $client->guichetReferent ? [
-                        'id'   => $client->guichetReferent->id,
-                        'nom'  => $client->guichetReferent->nom,
-                        'lieu' => $client->guichetReferent->lieu,
+                        'id'                   => $client->guichetReferent->id,
+                        'nom'                  => $client->guichetReferent->nom,
+                        'lieu'                 => $client->guichetReferent->lieu,
+                        'montant_frais_defaut' => $client->guichetReferent->montant_frais_defaut,
                     ] : null,
                 ];
             }

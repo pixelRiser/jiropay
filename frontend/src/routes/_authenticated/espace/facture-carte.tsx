@@ -4,10 +4,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { creerFacture, initierPaiement, type Facture } from "@/lib/jiropay/facture-api";
 import { ApiError } from "@/lib/jiropay/http";
+import { useAuth } from "@/lib/jiropay/auth-store";
 import { PageHeader } from "@/components/PageHeader";
 import { MethodesPaiementGoalPay } from "@/components/MethodesPaiementGoalPay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard, ArrowLeft } from "lucide-react";
@@ -31,6 +33,7 @@ function messageErreur(error: unknown, fallback: string): string {
 
 function FactureCarte() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [facture, setFacture] = useState<Facture | null>(null);
 
   const [referenceClient, setReferenceClient] = useState("");
@@ -61,6 +64,9 @@ function FactureCarte() {
   });
 
   if (facture) {
+    const frais = user?.client?.guichet_referent?.montant_frais_defaut ?? 0;
+    const total = facture.montant_du + frais;
+
     return (
       <>
         <PageHeader
@@ -71,11 +77,25 @@ function FactureCarte() {
           <CardHeader>
             <CardTitle>Compteur {facture.numero_compteur}</CardTitle>
             <CardDescription>
-              Titulaire : {facture.nom_titulaire} — Référence client : {facture.reference_facture} —
-              Montant : {facture.montant_du.toLocaleString("fr-FR")} Ar
+              Titulaire : {facture.nom_titulaire} — Référence client : {facture.reference_facture}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-1.5 rounded-lg border bg-muted/40 p-3 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Montant du crédit</span>
+                <span>{facture.montant_du.toLocaleString("fr-FR")} Ar</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Frais de service</span>
+                <span>{frais.toLocaleString("fr-FR")} Ar</span>
+              </div>
+              <Separator className="my-1" />
+              <div className="flex justify-between font-semibold text-foreground">
+                <span>Total à payer</span>
+                <span>{total.toLocaleString("fr-FR")} Ar</span>
+              </div>
+            </div>
             <MethodesPaiementGoalPay
               disabled={paiementMutation.isPending}
               onSelect={() => paiementMutation.mutate({ facture_id: facture.id })}
