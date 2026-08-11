@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AgentDecisionMail;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AgentController extends Controller
 {
@@ -78,6 +82,7 @@ class AgentController extends Controller
         abort_unless($user->role === 'agent', 422, "Cet utilisateur n'est pas un agent.");
 
         $user->update(['status' => 'approved']);
+        $this->notifierDecision($user, true);
 
         return response()->json(['success' => true, 'data' => $user]);
     }
@@ -87,8 +92,37 @@ class AgentController extends Controller
         abort_unless($user->role === 'agent', 422, "Cet utilisateur n'est pas un agent.");
 
         $user->update(['status' => 'rejected']);
+        $this->notifierDecision($user, false);
 
         return response()->json(['success' => true, 'data' => $user]);
+    }
+
+    /**
+     * "Le retour de demande" du couple demande/retour de demande — email +
+     * notification in-app à l'agent, jamais bloquant pour la décision admin
+     * elle-même (voir AuthController::register() pour "la demande").
+     */
+    private function notifierDecision(User $agent, bool $approuve): void
+    {
+        try {
+            $agent->load('guichet');
+            Mail::to($agent->email)->send(new AgentDecisionMail($agent, $approuve));
+            NotificationService::pour(
+                $agent,
+                $approuve ? 'agent_approved' : 'agent_rejected',
+                $approuve ? 'Compte agent approuvé' : 'Demande de compte agent rejetée',
+                $approuve
+                    ? 'Votre compte agent a été approuvé — vous pouvez désormais vous connecter.'
+                    : "Votre demande de compte agent pour {$agent->guichet?->nom} n'a pas été retenue.",
+                $approuve ? '/guichet' : null,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Échec notification agent — décision admin', [
+                'agent_id' => $agent->id,
+                'approuve' => $approuve,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Mail\RappelFactureMail;
 use App\Models\Client;
+use App\Services\NotificationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -42,6 +44,21 @@ class RappelClientsCommand extends Command
 
         foreach ($clients as $client) {
             Mail::to($client->user->email)->send(new RappelFactureMail($client));
+
+            try {
+                NotificationService::pour(
+                    $client->user,
+                    'rappel_facture',
+                    'Pensez à régler votre facture JIRAMA',
+                    "Nous n'avons enregistré aucun paiement confirmé ce mois-ci sur votre compte.",
+                    '/espace/payer-facture',
+                );
+            } catch (\Throwable $e) {
+                Log::error('Échec notification rappel mensuel', [
+                    'client_id' => $client->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         $this->info("Rappels envoyés.");

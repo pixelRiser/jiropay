@@ -7,6 +7,7 @@ use App\Mail\RecuJiramaMail;
 use App\Models\Paiement;
 use App\Models\PaiementJirama;
 use App\Models\Recu;
+use App\Services\NotificationService;
 use App\Services\TicketPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -141,6 +142,14 @@ class PaiementJiramaController extends Controller
                 'destinataire' => 'compte_client',
                 'envoye' => true,
             ]);
+
+            NotificationService::pour(
+                $paiement->client->user,
+                'facture_reglee',
+                'Votre paiement a été traité',
+                'Votre paiement JIRAMA a été confirmé et votre reçu électronique est disponible.',
+                '/espace/factures',
+            );
         } catch (\Throwable $e) {
             Log::error('Échec envoi email reçu JIRAMA', [
                 'paiement_id' => $paiement->id,

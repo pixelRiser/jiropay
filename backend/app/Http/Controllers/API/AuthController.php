@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AgentRegisteredMail;
 use App\Models\Client;
 use App\Models\Guichet;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -74,6 +78,26 @@ class AuthController extends Controller
         // Pas de connexion automatique — le compte doit d'abord être vérifié par
         // email avant de pouvoir se connecter (voir login() ci-dessous).
         $user->sendEmailVerificationNotification();
+
+        // "La demande" du couple demande/retour de demande — email + notification
+        // in-app à tous les admins, jamais bloquant pour l'inscription elle-même.
+        if ($role === 'agent') {
+            try {
+                $user->load('guichet');
+                Mail::to(User::where('role', 'admin')->pluck('email'))->send(new AgentRegisteredMail($user));
+                NotificationService::pourAdmins(
+                    'agent_registered',
+                    "Nouvelle demande d'agent",
+                    "{$user->name} a demandé à rejoindre {$guichet->nom} en tant qu'agent.",
+                    '/admin/agents',
+                );
+            } catch (\Throwable $e) {
+                Log::error("Échec notification admin — nouvelle demande d'agent", [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $message = $role === 'agent'
             ? 'Compte créé. Vérifiez votre boîte mail pour activer votre compte, puis attendez la validation d\'un administrateur avant de pouvoir vous connecter.'

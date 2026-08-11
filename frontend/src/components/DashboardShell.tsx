@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { UserMenu } from "@/components/UserMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { BrandMark } from "@/components/BrandMark";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,8 @@ export function DashboardShell({ navItems, children }: Props) {
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-end border-b bg-card px-8 py-3">
+        <header className="flex items-center justify-end gap-3 border-b bg-card px-8 py-3">
+          <NotificationBell />
           <UserMenu />
         </header>
         <main className="flex-1 overflow-y-auto px-8 py-8">{children}</main>
