@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RecuJiramaMail;
 use App\Models\Paiement;
 use App\Models\PaiementJirama;
+use App\Models\Recu;
+use App\Services\TicketPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaiementJiramaController extends Controller
 {
@@ -45,7 +50,7 @@ class PaiementJiramaController extends Controller
      * la facture comme réglée auprès de JIRAMA (paye_jirama), ce qui rend le
      * reçu téléchargeable côté client (RecuController).
      */
-    public function store(Request $request, Paiement $paiement): JsonResponse
+    public function store(Request $request, Paiement $paiement, TicketPdfService $pdfService): JsonResponse
     {
         abort_unless($paiement->statut_mobile_money === 'confirme', 422, "Ce paiement n'est pas confirmé.");
         abort_if($paiement->paiementJirama()->exists(), 422, 'Un ticket a déjà été saisi pour ce paiement.');
@@ -116,6 +121,32 @@ class PaiementJiramaController extends Controller
         ]);
 
         $facture->update(['statut' => 'paye_jirama']);
+
+        // Envoi automatique du reçu par email (frontend/README.md §9 : "La
+        // validation déclenche l'envoi automatique d'un reçu électronique au
+        // compte du client"). Ne doit jamais faire échouer la saisie du
+        // ticket elle-même — l'admin a déjà fait le principal, un souci
+        // d'email ne doit pas lui faire perdre sa saisie.
+        try {
+            $clientEmail = $paiement->client->user->email;
+            $pdf = $pdfService->generer($ticket, $facture);
+            $nomFichier = $pdfService->nomFichier($ticket);
+
+            Mail::to($clientEmail)->send(new RecuJiramaMail($ticket, $facture, $pdf->output(), $nomFichier));
+
+            Recu::create([
+                'paiement_id' => $paiement->id,
+                'numero_recu' => $ticket->numero_ticket ?: "REC-{$paiement->id}",
+                'date_emission' => now(),
+                'destinataire' => 'compte_client',
+                'envoye' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Échec envoi email reçu JIRAMA', [
+                'paiement_id' => $paiement->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json(['success' => true, 'data' => $ticket], 201);
     }

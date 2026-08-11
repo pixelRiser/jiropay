@@ -58,4 +58,25 @@ class ClientController extends Controller
 
         return response()->json(['success' => true, 'data' => $newUser->load('client')], 201);
     }
+
+    /**
+     * Réattribue un client à un autre guichet référent — réservé à l'admin,
+     * en cas de litige (frontend/README.md §5 : "Un changement n'est possible
+     * que par une intervention manuelle de l'admin"). N'affecte que les
+     * paiements futurs — l'historique (paiements/commissions déjà générés)
+     * garde son guichet_referent_id d'origine, copié au moment du paiement.
+     */
+    public function updateGuichet(Request $request, Client $client): JsonResponse
+    {
+        $validated = $request->validate([
+            'guichet_id' => 'required|integer|exists:guichets,id',
+        ], [
+            'guichet_id.required' => 'Le nouveau guichet est obligatoire.',
+            'guichet_id.exists' => 'Guichet introuvable.',
+        ]);
+
+        $client->update(['guichet_referent_id' => $validated['guichet_id']]);
+
+        return response()->json(['success' => true, 'data' => $client->load('guichetReferent')]);
+    }
 }

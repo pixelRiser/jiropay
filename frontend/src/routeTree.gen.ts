@@ -22,6 +22,7 @@ import { Route as PaiementSuccesRouteImport } from './routes/paiement.succes'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminAgentsRouteImport } from './routes/_authenticated/admin/agents'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin/clients'
+import { Route as AuthenticatedAdminCommissionsRouteImport } from './routes/_authenticated/admin/commissions'
 import { Route as AuthenticatedAdminGuichetsRouteImport } from './routes/_authenticated/admin/guichets'
 import { Route as AuthenticatedAdminPaiementsRouteImport } from './routes/_authenticated/admin/paiements'
 import { Route as AuthenticatedAdminProfilRouteImport } from './routes/_authenticated/admin/profil'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedEspacePayerFactureRouteImport } from './routes/_a
 import { Route as AuthenticatedEspaceProfilRouteImport } from './routes/_authenticated/espace/profil'
 import { Route as AuthenticatedGuichetIndexRouteImport } from './routes/_authenticated/guichet/index'
 import { Route as AuthenticatedGuichetClientsRouteImport } from './routes/_authenticated/guichet/clients'
+import { Route as AuthenticatedGuichetPaiementsRouteImport } from './routes/_authenticated/guichet/paiements'
 import { Route as AuthenticatedGuichetProfilRouteImport } from './routes/_authenticated/guichet/profil'
 
 const IndexRoute = IndexRouteImport.update({
@@ -102,6 +104,12 @@ const AuthenticatedAdminClientsRoute =
     path: '/clients',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminCommissionsRoute =
+  AuthenticatedAdminCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminGuichetsRoute =
   AuthenticatedAdminGuichetsRouteImport.update({
     id: '/guichets',
@@ -162,6 +170,12 @@ const AuthenticatedGuichetClientsRoute =
     path: '/clients',
     getParentRoute: () => AuthenticatedGuichetRouteRoute,
   } as any)
+const AuthenticatedGuichetPaiementsRoute =
+  AuthenticatedGuichetPaiementsRouteImport.update({
+    id: '/paiements',
+    path: '/paiements',
+    getParentRoute: () => AuthenticatedGuichetRouteRoute,
+  } as any)
 const AuthenticatedGuichetProfilRoute =
   AuthenticatedGuichetProfilRouteImport.update({
     id: '/profil',
@@ -181,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/paiement/succes': typeof PaiementSuccesRoute
   '/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/commissions': typeof AuthenticatedAdminCommissionsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/admin/paiements': typeof AuthenticatedAdminPaiementsRoute
   '/admin/profil': typeof AuthenticatedAdminProfilRoute
@@ -189,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/espace/profil': typeof AuthenticatedEspaceProfilRoute
   '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/guichet/paiements': typeof AuthenticatedGuichetPaiementsRoute
   '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/espace/': typeof AuthenticatedEspaceIndexRoute
@@ -203,6 +219,7 @@ export interface FileRoutesByTo {
   '/paiement/succes': typeof PaiementSuccesRoute
   '/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/commissions': typeof AuthenticatedAdminCommissionsRoute
   '/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/admin/paiements': typeof AuthenticatedAdminPaiementsRoute
   '/admin/profil': typeof AuthenticatedAdminProfilRoute
@@ -211,6 +228,7 @@ export interface FileRoutesByTo {
   '/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/espace/profil': typeof AuthenticatedEspaceProfilRoute
   '/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/guichet/paiements': typeof AuthenticatedGuichetPaiementsRoute
   '/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/espace': typeof AuthenticatedEspaceIndexRoute
@@ -230,6 +248,7 @@ export interface FileRoutesById {
   '/paiement/succes': typeof PaiementSuccesRoute
   '/_authenticated/admin/agents': typeof AuthenticatedAdminAgentsRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/_authenticated/admin/commissions': typeof AuthenticatedAdminCommissionsRoute
   '/_authenticated/admin/guichets': typeof AuthenticatedAdminGuichetsRoute
   '/_authenticated/admin/paiements': typeof AuthenticatedAdminPaiementsRoute
   '/_authenticated/admin/profil': typeof AuthenticatedAdminProfilRoute
@@ -238,6 +257,7 @@ export interface FileRoutesById {
   '/_authenticated/espace/payer-facture': typeof AuthenticatedEspacePayerFactureRoute
   '/_authenticated/espace/profil': typeof AuthenticatedEspaceProfilRoute
   '/_authenticated/guichet/clients': typeof AuthenticatedGuichetClientsRoute
+  '/_authenticated/guichet/paiements': typeof AuthenticatedGuichetPaiementsRoute
   '/_authenticated/guichet/profil': typeof AuthenticatedGuichetProfilRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/espace/': typeof AuthenticatedEspaceIndexRoute
@@ -257,6 +277,7 @@ export interface FileRouteTypes {
     | '/paiement/succes'
     | '/admin/agents'
     | '/admin/clients'
+    | '/admin/commissions'
     | '/admin/guichets'
     | '/admin/paiements'
     | '/admin/profil'
@@ -265,6 +286,7 @@ export interface FileRouteTypes {
     | '/espace/payer-facture'
     | '/espace/profil'
     | '/guichet/clients'
+    | '/guichet/paiements'
     | '/guichet/profil'
     | '/admin/'
     | '/espace/'
@@ -279,6 +301,7 @@ export interface FileRouteTypes {
     | '/paiement/succes'
     | '/admin/agents'
     | '/admin/clients'
+    | '/admin/commissions'
     | '/admin/guichets'
     | '/admin/paiements'
     | '/admin/profil'
@@ -287,6 +310,7 @@ export interface FileRouteTypes {
     | '/espace/payer-facture'
     | '/espace/profil'
     | '/guichet/clients'
+    | '/guichet/paiements'
     | '/guichet/profil'
     | '/admin'
     | '/espace'
@@ -305,6 +329,7 @@ export interface FileRouteTypes {
     | '/paiement/succes'
     | '/_authenticated/admin/agents'
     | '/_authenticated/admin/clients'
+    | '/_authenticated/admin/commissions'
     | '/_authenticated/admin/guichets'
     | '/_authenticated/admin/paiements'
     | '/_authenticated/admin/profil'
@@ -313,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/espace/payer-facture'
     | '/_authenticated/espace/profil'
     | '/_authenticated/guichet/clients'
+    | '/_authenticated/guichet/paiements'
     | '/_authenticated/guichet/profil'
     | '/_authenticated/admin/'
     | '/_authenticated/espace/'
@@ -422,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/commissions': {
+      id: '/_authenticated/admin/commissions'
+      path: '/commissions'
+      fullPath: '/admin/commissions'
+      preLoaderRoute: typeof AuthenticatedAdminCommissionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/guichets': {
       id: '/_authenticated/admin/guichets'
       path: '/guichets'
@@ -492,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGuichetClientsRouteImport
       parentRoute: typeof AuthenticatedGuichetRouteRoute
     }
+    '/_authenticated/guichet/paiements': {
+      id: '/_authenticated/guichet/paiements'
+      path: '/paiements'
+      fullPath: '/guichet/paiements'
+      preLoaderRoute: typeof AuthenticatedGuichetPaiementsRouteImport
+      parentRoute: typeof AuthenticatedGuichetRouteRoute
+    }
     '/_authenticated/guichet/profil': {
       id: '/_authenticated/guichet/profil'
       path: '/profil'
@@ -505,6 +545,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAgentsRoute: typeof AuthenticatedAdminAgentsRoute
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRoute
+  AuthenticatedAdminCommissionsRoute: typeof AuthenticatedAdminCommissionsRoute
   AuthenticatedAdminGuichetsRoute: typeof AuthenticatedAdminGuichetsRoute
   AuthenticatedAdminPaiementsRoute: typeof AuthenticatedAdminPaiementsRoute
   AuthenticatedAdminProfilRoute: typeof AuthenticatedAdminProfilRoute
@@ -515,6 +556,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminAgentsRoute: AuthenticatedAdminAgentsRoute,
     AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRoute,
+    AuthenticatedAdminCommissionsRoute: AuthenticatedAdminCommissionsRoute,
     AuthenticatedAdminGuichetsRoute: AuthenticatedAdminGuichetsRoute,
     AuthenticatedAdminPaiementsRoute: AuthenticatedAdminPaiementsRoute,
     AuthenticatedAdminProfilRoute: AuthenticatedAdminProfilRoute,
@@ -550,6 +592,7 @@ const AuthenticatedEspaceRouteRouteWithChildren =
 
 interface AuthenticatedGuichetRouteRouteChildren {
   AuthenticatedGuichetClientsRoute: typeof AuthenticatedGuichetClientsRoute
+  AuthenticatedGuichetPaiementsRoute: typeof AuthenticatedGuichetPaiementsRoute
   AuthenticatedGuichetProfilRoute: typeof AuthenticatedGuichetProfilRoute
   AuthenticatedGuichetIndexRoute: typeof AuthenticatedGuichetIndexRoute
 }
@@ -557,6 +600,7 @@ interface AuthenticatedGuichetRouteRouteChildren {
 const AuthenticatedGuichetRouteRouteChildren: AuthenticatedGuichetRouteRouteChildren =
   {
     AuthenticatedGuichetClientsRoute: AuthenticatedGuichetClientsRoute,
+    AuthenticatedGuichetPaiementsRoute: AuthenticatedGuichetPaiementsRoute,
     AuthenticatedGuichetProfilRoute: AuthenticatedGuichetProfilRoute,
     AuthenticatedGuichetIndexRoute: AuthenticatedGuichetIndexRoute,
   }

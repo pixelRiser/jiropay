@@ -181,3 +181,58 @@ export async function creerTicketJirama(
     body: JSON.stringify(payload),
   });
 }
+
+export async function reassignerGuichetClient(clientId: number, guichetId: number): Promise<void> {
+  await apiFetch(`/api/admin/clients/${clientId}/guichet`, {
+    method: "PATCH",
+    body: JSON.stringify({ guichet_id: guichetId }),
+  });
+}
+
+export type CommissionDetail = {
+  id: number;
+  montant_facture: number;
+  montant_frais: number;
+  part_plateforme: number;
+  montant_commission: number;
+  statut: "creditee" | "reversee";
+  created_at: string;
+  guichet: { id: number; nom: string; lieu: string };
+  paiement: {
+    id: number;
+    facture: { id: number; type: "facture" | "carte"; reference_facture: string | null };
+    client: { user: { id: number; name: string; email: string } };
+  };
+};
+
+export type CommissionsResponse = {
+  data: CommissionDetail[];
+  total_creditee: number;
+  solde_par_guichet: { id: number; nom: string; lieu: string; solde_commission: number }[];
+};
+
+export async function listeCommissions(): Promise<CommissionsResponse> {
+  const res = await apiFetch<{ success: boolean } & CommissionsResponse>("/api/admin/commissions");
+  return {
+    data: res.data,
+    total_creditee: res.total_creditee,
+    solde_par_guichet: res.solde_par_guichet,
+  };
+}
+
+export type PaiementGuichet = {
+  id: number;
+  montant: number;
+  montant_commission: number | null;
+  statut_mobile_money: "en_attente" | "confirme" | "echoue";
+  date_paiement: string | null;
+  created_at: string;
+  facture: { id: number; type: "facture" | "carte"; reference_facture: string | null };
+  client: { user: { id: number; name: string; email: string } };
+  paiement_jirama: { id: number; date_saisie: string } | null;
+};
+
+export async function mesPaiementsGuichet(): Promise<PaiementGuichet[]> {
+  const res = await apiFetch<{ success: boolean; data: PaiementGuichet[] }>("/api/mes-paiements");
+  return res.data;
+}

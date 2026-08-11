@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Admin\AgentController;
+use App\Http\Controllers\API\Admin\CommissionController;
 use App\Http\Controllers\API\Admin\GuichetController;
 use App\Http\Controllers\API\Admin\PaiementJiramaController;
 use App\Http\Controllers\API\ClientController;
@@ -31,6 +32,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::get('paiements-jirama/en-attente', [PaiementJiramaController::class, 'enAttente']);
     Route::get('paiements-jirama/traites', [PaiementJiramaController::class, 'traites']);
     Route::post('paiements/{paiement}/ticket-jirama', [PaiementJiramaController::class, 'store']);
+
+    Route::get('commissions', [CommissionController::class, 'index']);
+    Route::patch('clients/{client}/guichet', [ClientController::class, 'updateGuichet']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,agent'])->group(function () {
@@ -40,6 +44,7 @@ Route::middleware(['auth:sanctum', 'role:admin,agent'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'role:agent'])->group(function () {
     Route::get('mon-guichet', [MyGuichetController::class, 'mine']);
+    Route::get('mes-paiements', [MyGuichetController::class, 'mesPaiements']);
 });
 
 Route::middleware(['auth:sanctum', 'role:client'])->group(function () {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Facture;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\TicketPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -14,10 +14,10 @@ class RecuController extends Controller
      * Télécharge le ticket JIRAMA PDF d'une facture payée du client connecté.
      * Le ticket n'existe que si l'admin l'a saisi manuellement après avoir
      * traité le paiement JIRAMA via TPE (voir Admin\PaiementJiramaController)
-     * — il n'y a pas de génération automatique. Design différent selon
-     * facture.type (facture postpayée vs carte prépayée).
+     * — il n'y a pas de génération automatique (le client le reçoit aussi
+     * par email à ce moment-là, ce téléchargement est un accès de secours).
      */
-    public function telecharger(Request $request, Facture $facture): Response
+    public function telecharger(Request $request, Facture $facture, TicketPdfService $pdfService): Response
     {
         $client = $request->user()->client;
         abort_unless($client, 403, "Ce compte n'a pas de profil client.");
@@ -29,18 +29,8 @@ class RecuController extends Controller
         $ticket = $paiement->paiementJirama;
         abort_unless($ticket, 404, "Votre ticket est en cours de traitement par notre équipe — revenez un peu plus tard.");
 
-        // Largeur commune (80mm, format ticket) — hauteur propre à chaque
-        // type, le ticket carte ayant davantage de sections (quantité, détail
-        // des taxes, jeton) donc naturellement plus long que le ticket facture.
-        $estCarte = $facture->type === 'carte';
-        $vue = $estCarte ? 'recus.ticket-carte' : 'recus.ticket-facture';
-        $hauteur = $estCarte ? 1060 : 620;
+        $pdf = $pdfService->generer($ticket, $facture);
 
-        $pdf = Pdf::loadView($vue, ['ticket' => $ticket, 'facture' => $facture])
-            ->setPaper([0, 0, 226.77, $hauteur]);
-
-        $nomFichier = $ticket->numero_ticket ?: "PAI-{$ticket->paiement_id}";
-
-        return $pdf->download("ticket-{$nomFichier}.pdf");
+        return $pdf->download($pdfService->nomFichier($ticket));
     }
 }
