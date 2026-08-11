@@ -10,27 +10,20 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
-const LIBELLE_ROLE: Record<string, string> = {
-  client: "Espace client",
-  agent: "Espace guichet",
-  admin: "Espace administrateur",
-};
-
 interface Props {
   role: "client" | "agent" | "admin";
   navItems: NavItem[];
   children: React.ReactNode;
 }
 
-export function DashboardShell({ role, navItems, children }: Props) {
+export function DashboardShell({ navItems, children }: Props) {
   const location = useLocation();
 
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-64 shrink-0 flex-col border-r bg-card">
-        <div className="flex flex-col gap-1 border-b px-4 py-4">
-          <BrandMark height={24} />
-          <p className="text-xs font-normal text-muted-foreground">{LIBELLE_ROLE[role]}</p>
+        <div className="flex items-center border-b px-4 py-4">
+          <BrandMark height={48} />
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
