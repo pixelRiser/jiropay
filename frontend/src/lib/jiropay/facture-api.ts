@@ -4,9 +4,12 @@ export type Paiement = {
   id: number;
   methode: "orange_money" | "mvola" | "airtel_money" | null;
   montant: number;
+  montant_frais: number | null;
+  reference_mobile_money: string | null;
   checkout_url: string | null;
   statut_mobile_money: "en_attente" | "confirme" | "echoue";
   erreur_gateway: string | null;
+  date_paiement: string | null;
   created_at: string;
 };
 

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
-import { mesFactures, supprimerFacture } from "@/lib/jiropay/facture-api";
+import { mesFactures, supprimerFacture, type Facture } from "@/lib/jiropay/facture-api";
 import { ApiError } from "@/lib/jiropay/http";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
@@ -16,6 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +42,7 @@ import {
   Trash2,
   RotateCcw,
   MoreVertical,
+  Eye,
 } from "lucide-react";
 
 function messageErreur(error: unknown, fallback: string): string {
@@ -59,6 +69,7 @@ const LIBELLE_STATUT_PAIEMENT: Record<
 function FacturesClient() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
+  const [factureApercu, setFactureApercu] = useState<Facture | null>(null);
   const { data: factures = [], isLoading } = useQuery({
     queryKey: ["mes-factures"],
     queryFn: mesFactures,
@@ -180,41 +191,45 @@ function FacturesClient() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {estConfirme ? (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        ) : (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8">
-                                <MoreVertical className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  to={
-                                    f.type === "carte"
-                                      ? "/espace/facture-carte"
-                                      : "/espace/payer-facture"
-                                  }
-                                  search={{ reprendre: f.id }}
-                                  className="cursor-pointer"
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setFactureApercu(f)}>
+                              <Eye className="mr-2 size-4" />
+                              Aperçu
+                            </DropdownMenuItem>
+                            {!estConfirme ? (
+                              <>
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    to={
+                                      f.type === "carte"
+                                        ? "/espace/facture-carte"
+                                        : "/espace/payer-facture"
+                                    }
+                                    search={{ reprendre: f.id }}
+                                    className="cursor-pointer"
+                                  >
+                                    <RotateCcw className="mr-2 size-4" />
+                                    Reprendre le paiement
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  disabled={supprimerMutation.isPending}
+                                  onClick={() => handleSupprimer(f.id, f.reference_facture)}
                                 >
-                                  <RotateCcw className="mr-2 size-4" />
-                                  Reprendre le paiement
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                disabled={supprimerMutation.isPending}
-                                onClick={() => handleSupprimer(f.id, f.reference_facture)}
-                              >
-                                <Trash2 className="mr-2 size-4" />
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                                  <Trash2 className="mr-2 size-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );
@@ -264,6 +279,120 @@ function FacturesClient() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!factureApercu} onOpenChange={(open) => !open && setFactureApercu(null)}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {factureApercu?.type === "carte" ? "Carte prépayée" : "Facture"} —{" "}
+              {factureApercu?.reference_facture ?? "—"}
+            </DialogTitle>
+            <DialogDescription>
+              {factureApercu?.type === "carte"
+                ? `Compteur ${factureApercu?.numero_compteur ?? "—"}`
+                : `Titulaire : ${factureApercu?.nom_titulaire ?? "—"}`}
+            </DialogDescription>
+          </DialogHeader>
+          {factureApercu ? (
+            <div className="space-y-5">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-foreground">Facture déclarée</h3>
+                <dl className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Référence facture</dt>
+                    <dd className="font-medium">{factureApercu.reference_facture ?? "—"}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">
+                      {factureApercu.type === "carte" ? "N° compteur" : "Titulaire"}
+                    </dt>
+                    <dd className="font-medium">
+                      {factureApercu.type === "carte"
+                        ? (factureApercu.numero_compteur ?? "—")
+                        : (factureApercu.nom_titulaire ?? "—")}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Montant dû</dt>
+                    <dd className="font-medium">
+                      {factureApercu.montant_du.toLocaleString("fr-FR")} Ar
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Statut facture</dt>
+                    <dd className="font-medium">{factureApercu.statut}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Déclarée le</dt>
+                    <dd className="font-medium">
+                      {new Date(factureApercu.created_at).toLocaleString("fr-FR")}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-foreground">
+                  Historique des paiements ({factureApercu.paiements.length})
+                </h3>
+                {factureApercu.paiements.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucune tentative de paiement.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {factureApercu.paiements.map((p) => {
+                      const statut = LIBELLE_STATUT_PAIEMENT[p.statut_mobile_money];
+                      return (
+                        <div key={p.id} className="rounded-lg border p-3 text-sm">
+                          <div className="mb-2 flex items-center justify-between">
+                            <Badge variant={statut?.variant ?? "secondary"}>
+                              {statut?.label ?? p.statut_mobile_money}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(p.date_paiement ?? p.created_at).toLocaleString("fr-FR")}
+                            </span>
+                          </div>
+                          <dl className="space-y-1">
+                            <div className="flex justify-between">
+                              <dt className="text-muted-foreground">
+                                Référence paiement (GoalPay)
+                              </dt>
+                              <dd className="font-medium">{p.reference_mobile_money ?? "—"}</dd>
+                            </div>
+                            <div className="flex justify-between">
+                              <dt className="text-muted-foreground">Montant payé (frais inclus)</dt>
+                              <dd className="font-medium">
+                                {p.montant.toLocaleString("fr-FR")} Ar
+                              </dd>
+                            </div>
+                            <div className="flex justify-between">
+                              <dt className="text-muted-foreground">Méthode</dt>
+                              <dd className="font-medium">
+                                {p.methode === "mvola"
+                                  ? "Mvola"
+                                  : p.methode === "orange_money"
+                                    ? "Orange Money"
+                                    : (p.methode ?? "—")}
+                              </dd>
+                            </div>
+                            {p.erreur_gateway ? (
+                              <div className="flex justify-between">
+                                <dt className="text-muted-foreground">Détail</dt>
+                                <dd className="font-medium text-destructive">{p.erreur_gateway}</dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
