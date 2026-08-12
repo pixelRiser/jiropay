@@ -67,6 +67,10 @@ function Auth() {
   });
   const [enAttenteVerification, setEnAttenteVerification] = useState<string | null>(null);
   const [renvoiChargement, setRenvoiChargement] = useState(false);
+  const [vueMotDePasseOublie, setVueMotDePasseOublie] = useState(false);
+  const [emailReset, setEmailReset] = useState("");
+  const [lienResetEnvoye, setLienResetEnvoye] = useState<string | null>(null);
+  const [resetChargement, setResetChargement] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -137,6 +141,26 @@ function Auth() {
     }
   }
 
+  async function demanderReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (resetChargement) return;
+    setResetChargement(true);
+    try {
+      await motDePasseOublie(emailReset);
+      setLienResetEnvoye(emailReset);
+    } catch (error) {
+      toast.error(messageErreur(error, "Une erreur est survenue."));
+    } finally {
+      setResetChargement(false);
+    }
+  }
+
+  function fermerVueMotDePasseOublie() {
+    setVueMotDePasseOublie(false);
+    setLienResetEnvoye(null);
+    setEmailReset("");
+  }
+
   async function renvoyer() {
     if (!enAttenteVerification) return;
     setRenvoiChargement(true);
@@ -192,6 +216,76 @@ function Auth() {
     );
   }
 
+  if (vueMotDePasseOublie) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="mb-6 flex items-center justify-center">
+            <BrandMark />
+          </div>
+          <Card>
+            {lienResetEnvoye ? (
+              <>
+                <CardHeader className="items-center text-center">
+                  <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                    <MailCheck className="size-6" />
+                  </span>
+                  <CardTitle>Vérifiez votre boîte mail</CardTitle>
+                  <CardDescription>
+                    Si un compte existe avec l'adresse{" "}
+                    <span className="font-medium text-foreground">{lienResetEnvoye}</span>, un lien
+                    de réinitialisation vient de lui être envoyé.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="ghost" className="w-full" onClick={fermerVueMotDePasseOublie}>
+                    Retour à la connexion
+                  </Button>
+                </CardContent>
+              </>
+            ) : (
+              <>
+                <CardHeader>
+                  <CardTitle>Mot de passe oublié</CardTitle>
+                  <CardDescription>
+                    Indiquez votre email — nous vous enverrons un lien pour définir un nouveau mot
+                    de passe.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form className="space-y-4" onSubmit={demanderReset}>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-reset">Email</Label>
+                      <Input
+                        id="email-reset"
+                        type="email"
+                        required
+                        autoFocus
+                        value={emailReset}
+                        onChange={(e) => setEmailReset(e.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={resetChargement}>
+                      {resetChargement ? "Envoi…" : "Envoyer le lien"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={fermerVueMotDePasseOublie}
+                    >
+                      Retour à la connexion
+                    </Button>
+                  </form>
+                </CardContent>
+              </>
+            )}
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
@@ -239,17 +333,9 @@ function Auth() {
                   <button
                     type="button"
                     className="block w-full cursor-pointer text-center text-xs text-muted-foreground hover:underline"
-                    onClick={async () => {
-                      if (!email) {
-                        toast.error("Entrez votre email d'abord.");
-                        return;
-                      }
-                      try {
-                        const res = await motDePasseOublie(email);
-                        toast.success(res.message);
-                      } catch (error) {
-                        toast.error(messageErreur(error, "Une erreur est survenue."));
-                      }
+                    onClick={() => {
+                      setEmailReset(email);
+                      setVueMotDePasseOublie(true);
                     }}
                   >
                     Mot de passe oublié ?
