@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable([
     'facture_id', 'client_id', 'guichet_referent_id', 'initiateur', 'methode',
     'montant', 'montant_frais', 'montant_commission', 'reference_mobile_money', 'checkout_url',
-    'statut_mobile_money', 'erreur_gateway', 'date_paiement',
+    'statut_mobile_money', 'erreur_gateway', 'date_paiement', 'alerte_admin_envoyee_at',
 ])]
 class Paiement extends Model
 {
@@ -24,6 +24,7 @@ class Paiement extends Model
             'montant_frais' => 'integer',
             'montant_commission' => 'integer',
             'date_paiement' => 'datetime',
+            'alerte_admin_envoyee_at' => 'datetime',
         ];
     }
 
