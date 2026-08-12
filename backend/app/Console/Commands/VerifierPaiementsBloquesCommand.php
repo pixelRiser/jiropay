@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\PaiementBloqueMail;
+use App\Mail\PaiementEnVerificationMail;
 use App\Models\Paiement;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -21,9 +22,11 @@ use Illuminate\Support\Facades\Mail;
  * lien GoalPay (~10 min) et alerte l'admin (à charge pour lui de vérifier
  * manuellement dans le dashboard GoalPay et de corriger via
  * Admin\PaiementController::updateStatut(), déjà en place) — une seule fois
- * par paiement (alerte_admin_envoyee_at). Le client reçoit une notification
- * rassurante en parallèle. Prévu pour tourner toutes les 5 min via cron (voir
- * scripts/run-artisan.sh).
+ * par paiement (alerte_admin_envoyee_at). Le client reçoit email + notification
+ * rassurants en parallèle — email indispensable ici : il vient de quitter
+ * l'app pour payer chez GoalPay, il n'est pas forcément connecté à JiroPay
+ * quand l'alerte se déclenche. Prévu pour tourner toutes les 5 min via cron
+ * (voir scripts/run-artisan.sh).
  */
 class VerifierPaiementsBloquesCommand extends Command
 {
@@ -59,6 +62,8 @@ class VerifierPaiementsBloquesCommand extends Command
                     "{$paiement->client->user->name} — {$paiement->montant} Ar — réf. {$paiement->reference_mobile_money}",
                     '/admin/paiements',
                 );
+
+                Mail::to($paiement->client->user->email)->send(new PaiementEnVerificationMail($paiement));
 
                 NotificationService::pour(
                     $paiement->client->user,
